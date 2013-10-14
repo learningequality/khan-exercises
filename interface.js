@@ -78,6 +78,7 @@ function problemTemplateRendered() {
     $("#answerform").submit(handleCheckAnswer);
     $("#skip-question-button").click(handleSkippedQuestion);
     $("#opt-out-button").click(handleOptOut);
+    $("#show-prereqs-button").click(handleShowPrereqs);
 
     // Hint button
     $("#hint").click(onHintButtonClicked);
@@ -144,10 +145,18 @@ function newProblem(e, data) {
     $("#hint").attr("disabled", hintsUsed >= numHints);
     enableCheckAnswer();
 
-    // Update related videos
+    // Render related videos, unless we're on the final stage of mastery.
     if (data.userExercise) {
-        Exercises.RelatedVideos.render(
-                data.userExercise.exerciseModel.relatedVideos);
+        var userExercise = data.userExercise;
+        var nearMastery = userExercise.exerciseProgress.level === "mastery2" ||
+                userExercise.exerciseProgress.level === "mastery3";
+        var task = Exercises.learningTask;
+        var hideRelatedVideos = task && task.isMasteryTask() && nearMastery;
+
+        if (!hideRelatedVideos) {
+            Exercises.RelatedVideos.render(
+                    data.userExercise.exerciseModel.relatedVideos);
+        }
     }
 }
 
@@ -346,6 +355,15 @@ function handleAttempt(data) {
         },10);
     }
     return false;
+}
+
+/**
+ * When the user clicks on the "Help me learn this" button in focus mode, we
+ * trigger an event to show the prereqs to the left.
+ */
+function handleShowPrereqs() {
+    $("#show-prereqs-button").prop("disabled", true);
+    $(Exercises).trigger("showPrereqs");
 }
 
 function onHintButtonClicked() {

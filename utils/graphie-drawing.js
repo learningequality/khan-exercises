@@ -201,8 +201,17 @@ $.extend(KhanUtil.Graphie.prototype, {
             center: [0, 0],
             radii: 5,
             start: 45,
-            end: 135
+            end: 135,
+            sector: false
         });
+
+        // Fill arcs by drawing an unstroked sector
+        if (!options.sector && options.fillOpacity !== 0) {
+            graphie.drawSector(_.extend({}, options, {
+                strokeOpacity: 0
+            }));
+            options.fillOpacity = 0;
+        }
 
         var styles = getStyles(options);
 
@@ -211,8 +220,15 @@ $.extend(KhanUtil.Graphie.prototype, {
             options.radii,
             options.start,
             options.end,
+            options.sector,
             styles.normalStyle
         );
+    },
+
+    drawSector: function(options) {
+        return this.drawArc(_.extend(options, {
+            sector: true
+        }));
     },
 
     drawEllipse: function(options) {
