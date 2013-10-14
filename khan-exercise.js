@@ -137,7 +137,9 @@ var Khan = (function() {
     userExercise,
 
     // Check to see if we're in local mode
-    localMode = typeof Exercises === "undefined",
+    // KA-LITE-MOD: hard-coded this, as we rely on a lot of the conditional logic that happens
+    // when localMode is true, but we also have the "Exercises" object defined
+    localMode = true,
 
     // Set in prepareSite when Exercises.init() has already been called
     assessmentMode,
@@ -216,7 +218,9 @@ var Khan = (function() {
     // Promise that gets resolved when MathJax is loaded
     mathJaxLoaded,
 
-    urlBase = localMode ? "../" : "/khan-exercises/",
+    // KA-LITE-MOD: pull this path from an externally specified variable, so it can point
+    // to the correct location of khan-exercises within the context of our Django project
+    urlBase = urlBaseOverride,
 
     // In local mode, we use khan-exercises local copy of the /images
     // directory.  But in production (on www.khanacademy.org), we use
@@ -244,8 +248,9 @@ var Khan = (function() {
                 document.getElementsByTagName("head")[0].appendChild(link);
             };
 
-            addLink("css/khan-site.css");
-            addLink("css/khan-exercise.css");
+            // KA-LITE-MOD: commented out these CSS files, as they interfere with our styles
+            // addLink("css/khan-site.css");
+            // addLink("css/khan-exercise.css");
             addLink("local-only/katex/katex.css");
             addLink("local-only/katex/fonts/fonts.css");
         })();
@@ -420,6 +425,12 @@ var Khan = (function() {
             // jQuery here because we load jQuery using this routine
             var script = document.createElement("script");
             script.async = "async";
+
+            // KA-LITE-MOD: added this to convert the "../local-only" urls in the list of modules to correct paths
+            if (url.indexOf(Khan.urlBase) != 0) {
+                url = Khan.urlBase + "qqq/" + url;
+            }
+
             script.src = url;
 
             script.onerror = function() {
@@ -832,8 +843,9 @@ var Khan = (function() {
 
         // Load in jQuery and underscore, as well as the interface glue code
         // TODO(cbhl): Don't load history.js if we aren't in readOnly mode.
+        // KA-LITE-MOD: commented out some of the modules here that we don't need/want
         var initScripts = [
-                "../local-only/jquery.js",
+                // "../local-only/jquery.js",
                 "../local-only/jquery-migrate-1.1.1.js",
                 "../local-only/jquery.ui.core.js",
                 "../local-only/jquery.ui.widget.js",
@@ -846,17 +858,17 @@ var Khan = (function() {
                 "../local-only/jquery.ui.resizable.js",
                 "../local-only/jquery.ui.dialog.js",
                 "../local-only/jquery.qtip.js",
-                "../local-only/underscore.js",
+                // "../local-only/underscore.js",
                 "../local-only/kas.js",
                 "../local-only/jed.js",
                 "../local-only/i18n.js",
                 "../local-only/localeplanet/icu." + lang + ".js",
                 "../local-only/i18n.js",
                 "../local-only/katex/katex.js",
-                "../exercises-stub.js",
+                // "../exercises-stub.js",
                 "../history.js",
-                "../interface.js",
-                "../related-videos.js"
+                "../interface.js"
+                // "../related-videos.js"
             ];
 
         (function loadInitScripts() {
@@ -951,6 +963,10 @@ var Khan = (function() {
         $.expr[":"].attached = function(elem) {
             return $.contains(elem.ownerDocument.documentElement, elem);
         };
+
+        // KA-LITE-MOD: trigger an event at this point, so that in KA Lite we can launch exercise rendering
+        $(Khan).trigger("loaded");
+
     }
 
     // Add up how much total weight is in each exercise so we can adjust for
@@ -1710,13 +1726,14 @@ var Khan = (function() {
     }
 
     function renderNextProblem(data) {
-        if (localMode) {
-            // Just generate a new problem from existing exercise
-            $(Exercises).trigger("clearExistingProblem");
-            makeProblem();
-        } else {
+        // KA-LITE-MOD: in this case, we don't want to run the localMode version
+        // if (localMode) {
+        //     // Just generate a new problem from existing exercise
+        //     $(Exercises).trigger("clearExistingProblem");
+        //     makeProblem();
+        // } else {
             loadAndRenderExercise(data.userExercise);
-        }
+        // }
     }
 
     /**
@@ -2146,14 +2163,15 @@ var Khan = (function() {
         // TODO(alpert): Is the DOM really not yet ready?
         $(function() {
             // Inject the site markup
-            if (localMode) {
-                $.get(urlBase + "exercises/khan-site.html", function(site) {
-                    $.get(urlBase + "exercises/khan-exercise.html",
-                        function(ex) {
-                            injectTestModeSite(site, ex);
-                        });
-                });
-            }
+            // KA-LITE-MOD: even though we're in localMode, we've already done the page rendering ourselves
+            // if (localMode) {
+            //     $.get(urlBase + "exercises/khan-site.html", function(site) {
+            //         $.get(urlBase + "exercises/khan-exercise.html",
+            //             function(ex) {
+            //                 injectTestModeSite(site, ex);
+            //             });
+            //     });
+            // }
         });
     }
 
