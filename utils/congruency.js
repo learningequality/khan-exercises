@@ -1,3 +1,9 @@
+define(function(require) {
+
+require("./angles.js");
+require("./interactive.js");
+require("./graphie-helpers.js");
+
 $.extend(KhanUtil, {
     // Add a "congruency" object that stores data about the
     // points, lines, and angles that you added to the congruency
@@ -161,7 +167,7 @@ $.extend(KhanUtil, {
 
             // the inverse function of the line
             line.invfunc = function(y) {
-                var slope = (line.slope === 0) ? 0.00001 : line.slope
+                var slope = (line.slope === 0) ? 0.00001 : line.slope;
                 return line.start[0] + (y - line.start[1]) / slope;
             };
 
@@ -269,6 +275,11 @@ $.extend(KhanUtil, {
                 // add our line
                 this.line.push(graph.line(this.start, this.end));
 
+                // add parallel line marker to horizontal line
+                if (direction[1] === 0) {
+                    ParallelLineMarkers(this.end[0] - 0.5, this.end[1]);
+                }
+
                 // set the attributes
                 this.line.attr(this.point.normalStyle);
                 this.point.visibleShape = this.line;
@@ -353,14 +364,14 @@ $.extend(KhanUtil, {
             };
 
             // make the clickable point change the state
-            $(line.point.mouseTarget[0]).bind("vmouseup", function(event) {
+            $(line.point.mouseTarget.getMouseTarget()).bind("vmouseup", function(event) {
                 line.setState((line.state === line.maxState) ? 0 : line.state + 1);
             });
 
             // make the line stick in the state it is in currently,
             // and remove the clickable part
             line.stick = function() {
-                line.point.mouseTarget.remove();
+                line.point.mouseTarget.getMouseTarget().remove();
             };
 
             // if we shouldn't be clickable, stick right now
@@ -416,11 +427,11 @@ $.extend(KhanUtil, {
             };
 
             // Make a clicky pointer
-            $(angle.point.mouseTarget[0]).css("cursor", "pointer");
+            $(angle.point.mouseTarget.getMouseTarget()).css("cursor", "pointer");
 
             // Increase the point's size
-            var pointRadius = Math.sin(KhanUtil.toRadians(angle.angle) / 2)
-                              * angle.radius * graph.scale[0];
+            var pointRadius = Math.sin(KhanUtil.toRadians(angle.angle) / 2) *
+                angle.radius * graph.scale[0];
             angle.point.mouseTarget.attr({ r: pointRadius });
 
             // Replace the shape with our angle
@@ -495,7 +506,7 @@ $.extend(KhanUtil, {
                 this.setStyles();
 
                 this.draw();
-            }
+            };
 
             // setup the original styles
             angle.setStyles();
@@ -504,15 +515,15 @@ $.extend(KhanUtil, {
             angle.draw();
 
             // Bind mouseclick
-            $(angle.point.mouseTarget[0]).bind("vmouseup", function(event) {
+            $(angle.point.mouseTarget.getMouseTarget()).bind("vmouseup", function(event) {
                 angle.setState((angle.state === angle.maxState) ? 0 : angle.state + 1);
             });
 
             // Make an angle stick in its current state
             // by removing the clicky part
             angle.stick = function() {
-                $(this.point.mouseTarget[0]).unbind();
-                this.point.mouseTarget.remove();
+                $(this.point.mouseTarget.getMouseTarget()).unbind();
+                this.point.mouseTarget.getMouseTarget().remove();
             };
 
             if (!angle.clickable) {
@@ -603,12 +614,12 @@ $.extend(KhanUtil, {
 
             var point = null;
 
-            coord = [];
+            var coord = [];
 
-            coord[0] = (line1.slope * line1.start[0]
-                        - line2.slope * line2.start[0]
-                        + line2.start[1] - line1.start[1]) /
-                       (line1.slope - line2.slope);
+            coord[0] = (line1.slope * line1.start[0] -
+                        line2.slope * line2.start[0] +
+                        line2.start[1] - line1.start[1]) /
+                        (line1.slope - line2.slope);
             coord[1] = line1.func(coord[0]);
 
             point = congruency.addPoint(pointName, coord);
@@ -661,4 +672,6 @@ $.extend(KhanUtil, {
 
         return congruency;
     }
+});
+
 });

@@ -1,3 +1,7 @@
+define(function(require) {
+
+require("./stat.js");
+
 $.extend(KhanUtil, {
 
     updateMean: function(mean) {
@@ -129,14 +133,14 @@ $.extend(KhanUtil, {
             $.each(points, function() {
                 if (this !== point) {
                     var pos = Math.round(this.coord[0] * 2) / 2;
-                    if (!$.isArray(positions[pos])) {
+                    if (!_.isArray(positions[pos])) {
                         positions[pos] = [];
                     }
                     positions[pos].push(this);
                 }
             });
 
-            if ($.isFunction(updateFunction)) {
+            if (_.isFunction(updateFunction)) {
                 updateFunction();
             }
 
@@ -219,7 +223,6 @@ $.extend(KhanUtil, {
     showMedianExample: function(onComplete) {
         var points = KhanUtil.currentGraph.graph.points;
         var targetMedian = KhanUtil.currentGraph.graph.targetMedian;
-        var maxWidth = Math.min(Math.abs(-7 - targetMedian), Math.abs(7 - targetMedian));
         var sortedPoints = points.sort(function(a, b) { return a.coord[0] - b.coord[0]; });
         var oldValues = [];
         $.each(sortedPoints, function(i, point) {
@@ -247,7 +250,6 @@ $.extend(KhanUtil, {
 
         var sortedPoints = points.sort(function(a, b) { return a.coord[0] - b.coord[0]; });
         var oldValues = [];
-        var newValues = [];
         $.each(sortedPoints, function(i, point) {
             oldValues.push(point.coord[0]);
         });
@@ -338,5 +340,7 @@ $.extend(KhanUtil, {
         });
         KhanUtil.currentGraph.graph.moved = true;
     }
+
+});
 
 });

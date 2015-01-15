@@ -1,3 +1,8 @@
+define(function(require) {
+
+require("./math.js");
+require("./expressions.js");
+
 $.extend(KhanUtil, {
     Polynomial: function(minDegree, maxDegree, coefs, variable, name) {
         var term = function(coef, vari, degree) {
@@ -24,10 +29,10 @@ $.extend(KhanUtil, {
             if (typeof expr === "number") {
                 coef = expr;
                 degree = 0;
-            } else if ($.isArray(expr) && !$.isArray(expr[2])) {
+            } else if (_.isArray(expr) && !_.isArray(expr[2])) {
                 coef = expr[1];
                 degree = 1;
-            } else if ($.isArray(expr) && $.isArray(expr[2])) {
+            } else if (_.isArray(expr) && _.isArray(expr[2])) {
                 coef = expr[1];
                 degree = expr[2][2];
             }
@@ -128,6 +133,15 @@ $.extend(KhanUtil, {
             return KhanUtil.expr(this.expr(this.variable));
         };
 
+
+        // Return a string that the expression editor can understand
+        // Probably a better way to do this than string replacements
+        this.parsableText = function() {
+            var s = this.text();
+            s = s.replace(/{/g, "(").replace(/}/g, ")");
+            return s;
+        };
+
         this.toString = this.text;
 
         this.hintEvalOf = function(val) {
@@ -142,8 +156,11 @@ $.extend(KhanUtil, {
             var hints = [];
             hints.push("<p><code>" + this.name + "(" + val + ") = " +
                 this.hintEvalOf(val) + "</code></p>");
-            hints.push("<p><code>" + this.name + "(" + val + ") = " +
-                this.evalOf(val) + "</code></p>");
+            // We don't need to evalate the expression if it's just a constant
+            if (this.findMaxDegree(this.coefs) > 0) {
+                hints.push("<p><code>" + this.name + "(" + val + ") = " +
+                    this.evalOf(val) + "</code></p>");
+            }
 
             return hints;
         };
@@ -161,7 +178,7 @@ $.extend(KhanUtil, {
             var ddxMaxDegree = this.maxDegree ? this.maxDegree - 1 : 0;
 
             return new KhanUtil.Polynomial(ddxMinDegree, ddxMaxDegree, ddxCoefs, this.variable);
-        },
+        };
 
         /**
          * Add this polynomial to a number or other polynomial.
@@ -410,4 +427,6 @@ $.extend(KhanUtil, {
         }
         return roots;
     }
+});
+
 });

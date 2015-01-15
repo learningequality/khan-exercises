@@ -1,3 +1,5 @@
+define(function(require) {
+
 // Helper for fractions_cut_and_copy_1 and fractions_cut_and_copy_2
 $.extend(KhanUtil, {
     initSliceClone: function(goalBlocks) {
@@ -40,7 +42,6 @@ $.extend(KhanUtil, {
 
     updateGraphAndAnswer: function() {
         var pieces = KhanUtil.pieces;
-        var times;
         _.each(KhanUtil.times, function(times, id) {
             KhanUtil.currentGraph = $("#problemarea").find("#" + id).data("graphie");
             KhanUtil.currentGraph.raphael.clear();
@@ -49,4 +50,6 @@ $.extend(KhanUtil, {
             $("#" + id + "_answer input").val(KhanUtil.roundTo(3, times / pieces));
         });
     }
+});
+
 });

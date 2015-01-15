@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -e
 
 # Updates a specific set of files from the webapp repo, that are needed
 # for khan-exercises 'local' mode.  See the README for more details.
@@ -30,21 +30,23 @@ if [ -z "$webapp_root" ]; then
     fi
 fi
 
-srcdir="$webapp_root/javascript/shared-package"
+srcdir="$webapp_root/third_party/javascript-khansrc"
 destdir="$exercises_root/local-only"
 
-# Copy stuff from shared-package into local-only.
-cp -f "$srcdir"/jquery.js "$destdir"
-cp -f "$srcdir"/jquery-migrate-1.1.1.js "$destdir"
-cp -f "$srcdir"/jquery.qtip.js "$destdir"
-cp -f "$srcdir"/underscore.js "$destdir"
-cp -f "$srcdir"/jed.js "$destdir"
-cp -f "$srcdir"/i18n.js "$destdir"
+# Copy stuff from the webapp repo into local-only.
+cp -f "$srcdir"/jed/jed.js "$destdir"
+cp -f "$srcdir"/jquery-migrate/jquery-migrate-1.1.1.js "$destdir"
+cp -f "$srcdir"/jquery/jquery.js "$destdir"
+cp -f "$srcdir"/qTip2/jquery.qtip.js "$destdir"
+cp -f "$srcdir"/underscore/underscore.js "$destdir"
 
-# jquery-ui is in its own package.
+cp -f "$webapp_root"/javascript/shared-package/i18n.js "$destdir"
+
+# We only need some of the jquery-ui files, and we'll concatenate them together
+rm -f "$destdir"/jquery-ui.js
 for f in core widget mouse position effect \
     effect-shake button draggable resizable dialog; do
-   cp -f "$webapp_root"/javascript/jqueryui-package/jquery.ui.$f.js "$destdir"
+   cat "$srcdir"/jqueryui/jquery.ui.$f.js >>"$destdir"/jquery-ui.js
 done
 
 # We copy all the icu files, so we can support 'commafy' in all locales.
@@ -56,11 +58,11 @@ cp -f "$webapp_root"/third_party/javascript-khansrc/localeplanet/icu.* \
 rm -f "$destdir/localeplanet/icu.__language__.js"
 
 # Update khan-site.css
-python "$webapp_root/deploy/compress.py" shared.css exercises.css \
+python "$webapp_root/kake/build_prod_main.py" shared.css exercises.css \
    --readable --no-update-manifest
 
-cat "$webapp_root/genfiles/combined-stylesheets-prod/en/shared-package"-* \
-    "$webapp_root/genfiles/combined-stylesheets-prod/en/exercises-package"-* \
+cat "$webapp_root/genfiles/readable_css_packages_prod/en/shared-package.css" \
+    "$webapp_root/genfiles/readable_css_packages_prod/en/exercises-package.css" \
     | sed 's|url(/*\(.*images.*\))|url(http://www.khanacademy.org/\1)|' \
     > "$exercises_root/css/khan-site.css"
 

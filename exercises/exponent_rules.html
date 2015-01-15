@@ -3,62 +3,82 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Exponent rules</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
         <div class="problems">
             <div id="adding">
-                <div class="vars" data-ensure="EXP1 !== EXP2">
+                <div class="vars" data-ensure="EXP1 !== EXP2 && EXP1 + EXP2 !== 1">
                     <var id="BASE">randRange(3, 9)</var>
-
                     <var id="EXP1">randRange(3, 12) * (rand(2) ? 1 : -1)</var>
                     <var id="EXP2">randRange(3, 12) * (rand(2) ? 1 : -1)</var>
                 </div>
 
-                <p class="question">What is <code><var>expr(["*", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var></code>?</p>
-                <p class="solution" data-type="multiple">
-                    <code><var>BASE</var></code> <span class="sol short25 exp"><var>EXP1 + EXP2</var></span>
+                <p class="question">
+                    Rewrite <code>\large{<var>expr(["*", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var>}</code>
+                    in the form <code>\large{<var>BASE</var>^n}</code>.
+                </p>
+                <p class="solution" data-type="expression" data-same-form="">
+                    <var>BASE</var>^<var>EXP1 + EXP2</var>
                 </p>
 
                 <div class="hints">
-                    <p><code>
-                        <var>expr(["*", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var> = <var>expr(["^", BASE, ["+", EXP1, EXP2]])</var>
+                    <p><code>\large{
+                        <var>expr(["*", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var> = 
+                        <var>expr(["^", BASE, ["+", EXP1, EXP2]])</var>}
                     </code></p>
-                    <p><code>
-                        \hphantom{<var>expr(["*", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var>} = <var>BASE</var>^{<var>EXP1 + EXP2</var>}
+                    <p><code>\large{\hphantom{
+                        <var>expr(["*", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var>} = 
+                        <var>BASE</var>^{<var>EXP1 + EXP2</var>}}
                     </code></p>
                 </div>
             </div>
 
             <div id="subtracting" data-type="adding">
-                <p class="question">What is <code>\displaystyle <var>expr(["frac", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var></code>?</p>
-                <p class="solution" data-type="multiple">
-                    <code><var>BASE</var></code> <span class="sol short25 exp"><var>EXP1 - EXP2</var></span>
+                <div class="vars" data-ensure="EXP1 !== EXP2 && EXP1 - EXP2 !== 1">
+                    <var id="BASE">randRange(3, 9)</var>
+                    <var id="EXP1">randRange(3, 12) * (rand(2) ? 1 : -1)</var>
+                    <var id="EXP2">randRange(3, 12) * (rand(2) ? 1 : -1)</var>
+                </div>
+
+                <p class="question">
+                    Rewrite <code>\large{<var>expr(["frac", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var>}</code>
+                    in the form <code>\large{<var>BASE</var>^n}</code>.
+                </p>
+                <p class="solution" data-type="expression" data-same-form="">
+                    <var>BASE</var>^<var>EXP1 - EXP2</var>
                 </p>
 
                 <div class="hints">
-                    <p><code>\displaystyle
-                        <var>expr(["frac", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var> = <var>expr(["^", BASE, ["-", EXP1, EXP2]])</var>
+                    <p><code>\large{
+                        <var>expr(["frac", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var> = 
+                        <var>expr(["^", BASE, ["-", EXP1, EXP2]])</var>}
                     </code></p>
-                    <p><code>\displaystyle
-                        \hphantom{<var>expr(["frac", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var>} = <var>BASE</var>^{<var>EXP1 - EXP2</var>}
+                    <p><code>\large{
+                        \hphantom{<var>expr(["frac", ["^", BASE, EXP1], ["^", BASE, EXP2]])</var>} = 
+                        <var>BASE</var>^{<var>EXP1 - EXP2</var>}}
                     </code></p>
                 </div>
             </div>
 
             <div id="multiplying" data-type="adding">
-                <p class="question">What is <code><var>expr(["^", ["^", BASE, EXP1], EXP2])</var></code>?</p>
-                <p class="solution" data-type="multiple">
-                    <code><var>BASE</var></code> <span class="sol short25 exp"><var>EXP1 * EXP2</var></span>
+                <p class="question">
+                    Rewrite <code>\large{<var>expr(["^", ["^", BASE, EXP1], EXP2])</var>}</code>
+                    in the form <code>\large{<var>BASE</var>^n}</code>.
+                </p>
+                <p class="solution" data-type="expression" data-same-form="">
+                    <var>BASE</var>^<var>EXP1 * EXP2</var>
                 </p>
 
                 <div class="hints">
-                    <p><code>
-                        <var>expr(["^", ["^", BASE, EXP1], EXP2])</var> = <var>expr(["^", BASE, ["*", EXP1, EXP2]])</var>
+                    <p><code>\large{
+                        <var>expr(["^", ["^", BASE, EXP1], EXP2])</var> = 
+                        <var>expr(["^", BASE, ["*", EXP1, EXP2]])</var>}
                     </code></p>
-                    <p><code>
-                        \hphantom{<var>expr(["^", ["^", BASE, EXP1], EXP2])</var>} = <var>BASE</var>^{<var>EXP1 * EXP2</var>}
+                    <p><code>\large{\hphantom{
+                        <var>expr(["^", ["^", BASE, EXP1], EXP2])</var>} =
+                        <var>BASE</var>^{<var>EXP1 * EXP2</var>}}
                     </code></p>
                 </div>
             </div>
@@ -67,23 +87,27 @@
                 <div class="vars" data-ensure="getGCD(BASE1, BASE2) === 1">
                     <var id="BASE1">randRange(3, 9)</var>
                     <var id="BASE2">randRange(3, 9)</var>
-
                     <var id="EXP1">randRange(3, 12) * (rand(2) ? 1 : -1)</var>
                     <var id="EXP2">randRange(3, 12) * (rand(2) ? 1 : -1)</var>
                     <var id="EXP3">randRange(3, 12) * (rand(2) ? 1 : -1)</var>
                 </div>
 
-                <p class="question">What is <code><var>expr(["^", ["*", ["^", BASE1, EXP1], ["^", BASE2, EXP2]], EXP3])</var></code>?</p>
-                <p class="solution" data-type="multiple">
-                    <code><var>BASE1</var></code> <span class="sol short25 exp"><var>EXP1 * EXP3</var></span> · <code><var>BASE2</var></code> <span class="sol short25 exp"><var>EXP2 * EXP3</var></span>
+                <p class="question">
+                    Rewrite <code>\large{<var>expr(["^", ["*", ["^", BASE1, EXP1], ["^", BASE2, EXP2]], EXP3])</var>}</code>
+                    in the form <code>\large{<var>BASE1</var>^n \times <var>BASE2</var>^m}</code>.
+                </p>
+                <p class="solution" data-type="expression" data-same-form=""  data-times="">
+                    <var>BASE1</var>^<var>EXP1 * EXP3</var> * <var>BASE2</var>^<var>EXP2 * EXP3</var>
                 </p>
 
                 <div class="hints">
-                    <p><code>
-                        <var>expr(["^", ["*", ["^", BASE1, EXP1], ["^", BASE2, EXP2]], EXP3])</var> = <var>expr(["*", ["^", BASE1, ["*", EXP1, EXP3]], ["^", BASE2, ["*", EXP2, EXP3]]])</var>
+                    <p><code>\large{
+                        <var>expr(["^", ["*", ["^", BASE1, EXP1], ["^", BASE2, EXP2]], EXP3])</var> =
+                        <var>expr(["*", ["^", BASE1, ["*", EXP1, EXP3]], ["^", BASE2, ["*", EXP2, EXP3]]])</var>}
                     </code></p>
-                    <p><code>
-                        \hphantom{<var>expr(["^", ["*", ["^", BASE1, EXP1], ["^", BASE2, EXP2]], EXP3])</var>} = <var>expr(["^", BASE1, EXP1*EXP3])</var> \cdot <var>expr(["^", BASE2, EXP2*EXP3])</var>
+                    <p><code>\large{\hphantom{
+                        <var>expr(["^", ["*", ["^", BASE1, EXP1], ["^", BASE2, EXP2]], EXP3])</var>} =
+                        <var>expr(["^", BASE1, EXP1*EXP3])</var> \times <var>expr(["^", BASE2, EXP2*EXP3])</var>}
                     </code></p>
                 </div>
             </div>

@@ -1,3 +1,8 @@
+define(function(require) {
+
+require("./math.js");
+require("./graphie.js");
+
 /**
  * Provides a concise API for drawing static versions of the 2D
  * geometrical constructs found in interactive.js, consistent with
@@ -6,7 +11,7 @@
 
 // Expand an object's whitelisted non-array keys into arrays of length n
 // e.g. expandKeys({foo: 1, bar: 2}, ["foo"], 3) -> {foo: [1, 1, 1], bar: 2}
-function expandKeys(obj, keys, n) {
+var expandKeys = function(obj, keys, n) {
     _.each(keys, function(key) {
         var value = obj[key];
         if (!_.isArray(value)) {
@@ -15,7 +20,7 @@ function expandKeys(obj, keys, n) {
             });
         }
     });
-}
+};
 
 var normalStyle = {
     stroke: KhanUtil.BLACK,
@@ -32,15 +37,15 @@ var labelStyle = _.extend({}, normalStyle, {
 });
 
 // Return a copy of the object with all camelCase keys converted to dashed-case
-function toDashed(obj) {
+var toDashed = function(obj) {
     var keys = _.map(_.keys(obj), function(key) {
         return key.replace(/([a-z])([A-Z])/g, "$1-$2").toLowerCase();
     });
     return _.object(keys, _.values(obj));
-}
+};
 
 // Return the normal and label styles for a given options object
-function getStyles(options) {
+var getStyles = function(options) {
     // Color overrides stroke and fill if not present
     if (_.has(options, "color")) {
         _.defaults(options, {
@@ -62,7 +67,7 @@ function getStyles(options) {
         normalStyle: toDashed(_.extend({}, normalStyle, options)),
         labelStyle: toDashed(_.extend({}, labelStyle, options))
     };
-}
+};
 
 $.extend(KhanUtil.Graphie.prototype, {
 
@@ -154,6 +159,7 @@ $.extend(KhanUtil.Graphie.prototype, {
         // Shorthand defaults for all per angle/side/vertex properties
         var defaults = {
             angleLabels: "",
+            showRightAngleMarkers: true,
             sideLabels: "",
             vertexLabels: "",
             arcs: 0,
@@ -165,7 +171,7 @@ $.extend(KhanUtil.Graphie.prototype, {
         _.defaults(options, defaults, {
             points: [[3, -2], [0, 4], [-3, -2]]
         });
-        
+
         expandKeys(options, _.keys(defaults), options.points.length);
 
         var styles = getStyles(_.omit(options, "arrows"));
@@ -268,6 +274,7 @@ $.extend(KhanUtil.Graphie.prototype, {
         _.defaults(options, {
             points: [],
             label: "",
+            showRightAngleMarker: true,
             distance: 0,
             arcs: 1
         });
@@ -280,6 +287,7 @@ $.extend(KhanUtil.Graphie.prototype, {
             point3: options.points[2],
             clockwise: true,
             text: options.label,
+            showRightAngleMarker: options.showRightAngleMarker,
             numArcs: options.arcs,
             pushOut: options.distance,
             style: styles.labelStyle
@@ -287,4 +295,6 @@ $.extend(KhanUtil.Graphie.prototype, {
     }
 
     // TODO(alex): drawPolyline(), drawSpokes(), labelSegment()
+});
+
 });

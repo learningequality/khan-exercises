@@ -1,3 +1,5 @@
+define(function(require) {
+
 $.extend(KhanUtil, {
 
     expr: function(expr, compute) {
@@ -15,6 +17,9 @@ $.extend(KhanUtil, {
     exprType: function(expr) {
 
         if (typeof expr === "object") {
+            if (expr[0] === "color") {
+                return KhanUtil.exprType(expr[2]);
+            }
 
             return expr[0];
 
@@ -212,7 +217,7 @@ $.extend(KhanUtil, {
                         break;
                     }
 
-                    parenthesizeRest || (parenthesizeRest = parenthesize);
+                    parenthesizeRest = parenthesizeRest || parenthesize;
                     factor = KhanUtil.expr(factor);
 
                     if (parenthesizeRest) {
@@ -432,7 +437,7 @@ $.extend(KhanUtil, {
         },
 
         "+-": function() {
-            return Number.NaN;
+            return NaN;
         }
     },
 
@@ -493,3 +498,5 @@ $.extend(KhanUtil, {
 });
 
 KhanUtil.computeOperators["frac"] = KhanUtil.computeOperators["/"];
+
+});

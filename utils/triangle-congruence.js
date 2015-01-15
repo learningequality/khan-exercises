@@ -1,3 +1,5 @@
+define(function(require) {
+
 $.extend(KhanUtil, {
 
     initCongruence: function(options) {
@@ -406,7 +408,6 @@ $.extend(KhanUtil, {
 
             // When point 3 moves, scale the entire triangle
             triangle.points[3].onMove = function(coordX, coordY) {
-                var origCoord = triangle.points[3].coord;
                 triangle.points[3].coord = [coordX, coordY];
                 triangle.points[0].setCoord([coordX, coordY]);
                 var scaleFactor = KhanUtil.getDistance([coordX, coordY], triangle.rotationPoint.coord) / triangle.radii[3];
@@ -602,15 +603,15 @@ $.extend(KhanUtil, {
 
         coord[0] += options.sides[0] * Math.cos(angles[0] * Math.PI / 180);
         coord[1] += options.sides[0] * Math.sin(angles[0] * Math.PI / 180);
-        triangle.points.push(graphie.addMovablePoint({ coord: coord }));
+        triangle.points.push(graphie.addMovablePoint({ coord: coord, bounded: false }));
 
         coord[0] += options.sides[1] * Math.cos(-(180 - angles[1] - angles[0]) * Math.PI / 180);
         coord[1] += options.sides[1] * Math.sin(-(180 - angles[1] - angles[0]) * Math.PI / 180);
-        triangle.points.push(graphie.addMovablePoint({ coord: coord }));
+        triangle.points.push(graphie.addMovablePoint({ coord: coord, bounded: false }));
 
         coord[0] += options.sides[2] * Math.cos((angles[2] + angles[1] + angles[0]) * Math.PI / 180);
         coord[1] += options.sides[2] * Math.sin((angles[2] + angles[1] + angles[0]) * Math.PI / 180);
-        triangle.points.push(graphie.addMovablePoint({ coord: coord }));
+        triangle.points.push(graphie.addMovablePoint({ coord: coord, bounded: false }));
 
         triangle.lines.push(graphie.addMovableLineSegment({ pointA: triangle.points[0], pointZ: triangle.points[1], ticks: options.ticks[0], highlightStyle: { "stroke": KhanUtil.BLUE, "stroke-width": 4 } }));
         triangle.lines.push(graphie.addMovableLineSegment({ pointA: triangle.points[1], pointZ: triangle.points[2], ticks: options.ticks[1], highlightStyle: { "stroke": KhanUtil.BLUE, "stroke-width": 4 } }));
@@ -618,7 +619,7 @@ $.extend(KhanUtil, {
 
         triangle.rotationPoint = graphie.addMovablePoint({ visible: false });
 
-        // Translate the triangle so its all visible
+        // Translate the triangle so it's all visible
         var xlateX = 4 - Math.max(triangle.points[0].coord[0], triangle.points[1].coord[0], triangle.points[2].coord[0], triangle.points[3].coord[0]);
         var xlateY = 4 - Math.max(triangle.points[0].coord[1], triangle.points[1].coord[1], triangle.points[2].coord[1], triangle.points[3].coord[1]);
         $(triangle.points).each(function() { this.setCoord([this.coord[0] + xlateX, this.coord[1] + xlateY]); });
@@ -677,5 +678,7 @@ $.extend(KhanUtil, {
         graphie.drawArcs(triangle.points[1], triangle.points[2], triangle.points[0], arcs[2]);
         $(triangle.set).each(function() { this.toBack(); });
     }
+
+});
 
 });

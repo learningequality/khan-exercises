@@ -3,14 +3,14 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>One step equations</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
     <div class="vars" data-ensure="A !== B">
         <var id="X">randVar()</var>
-        <var id="A">randRangeNonZero(-30, 30)</var>
-        <var id="B">randRangeNonZero(-30, 30)</var>
+        <var id="A">randRangeNonZero(-30, 29)</var>
+        <var id="B">abs(randRangeNonZero(A, 30))</var>
     </div>
     <p class="question">Solve for <code><var>X</var></code>:</p>
     <div class="solution" data-type="multiple">

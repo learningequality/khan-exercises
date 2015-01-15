@@ -3,28 +3,12 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Perimeter 1</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
 <div class="exercise">
     <div class="vars">
-        <var id="UNIT,UNIT_TEXT">randFromArray([
-            ["in", new Plural(function(num) {
-                return $.ngettext("inch", "inches", num);
-            })],
-            ["ft", new Plural(function(num) {
-                return $.ngettext("foot", "feet", num);
-            })],
-            ["m", new Plural(function(num) {
-                return $.ngettext("meter", "meters", num);
-            })],
-            ["cm", new Plural(function(num) {
-                return $.ngettext("centimeter", "centimeters", num);
-            })],
-            ["", new Plural(function(num) {
-                return $.ngettext("unit", "units", num);
-            })]
-        ])</var>
+        <var id="UNIT,UNIT_TEXT">randFromArray(metricUnits.concat([genericUnit]))</var>
     </div>
     <div class="problems">
         <div id="square" data-weight="1">
@@ -36,6 +20,7 @@
             <p class="question">
                 What is the perimeter of the square?
             </p>
+            <div class="render-answer-area-here"></div>
             <div class="problem">
                 <div class="graphie" id="perimeter">
                     init({ range: [[-2, S + 1], [-1, S + 1]], scale: 30 });
@@ -81,6 +66,7 @@
             <p class="question">
                 What is the perimeter of the rectangle?
             </p>
+            <div class="render-answer-area-here"></div>
 
             <div class="problem">
                 <div class="graphie" id="perimeter">
@@ -128,6 +114,7 @@
             <p class="question">
                 What is the perimeter of the triangle?
             </p>
+            <div class="render-answer-area-here"></div>
 
             <div class="problem">
                 <div class="graphie" id="perimeter">
@@ -181,6 +168,7 @@
             <p class="question">
                 What is the perimeter of the regular <var>POLYGON</var>?
             </p>
+            <div class="render-answer-area-here"></div>
 
             <div class="problem">
                 <div class="graphie" id="perimeter">
@@ -253,6 +241,7 @@
                 What is the perimeter of the shape? Each square in the grid is
                 a <code>1 \times 1</code> <var>UNIT_TEXT</var> square.
             </p>
+            <div class="render-answer-area-here"></div>
 
             <div class="problem">
                 <div class="graphie" id="perimeter">

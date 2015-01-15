@@ -1,4 +1,6 @@
-(function() {
+define(function(require) {
+
+var crc32 = require("./crc32.js");
 
 var localMode;
 
@@ -220,9 +222,6 @@ $.tmpl = {
         // We need to compute the value
         var code = elem.nodeName ? $(elem).text() : elem;
 
-        // Make sure any HTML formatting is stripped
-        code = $.trim($.tmpl.cleanHTML(code));
-
         // If no extra context was passed, use an empty object
         if (ctx == null) {
             ctx = {};
@@ -284,14 +283,9 @@ $.tmpl = {
 
         // Just convert top-level values to strings instead of recursively
         // stringifying, due to issues with circular references.
-        return KhanUtil.crc32(JSON.stringify($.map(VARS, function(value, key) {
+        return crc32(JSON.stringify($.map(VARS, function(value, key) {
             return [key, String(value)];
         })));
-    },
-
-    // Make sure any HTML formatting is stripped
-    cleanHTML: function(text) {
-        return ("" + text).replace(/&gt;/g, ">").replace(/&lt;/g, "<").replace(/&amp;/g, "&");
     }
 };
 
@@ -454,7 +448,7 @@ $.fn.tmpl = function() {
 
     // Run through the attr and type processors, return as soon as one of them is decisive about a plan of action
     function process(elem, post) {
-        var ret, newElem,
+        var ret,
             $elem = $(elem);
 
         // Look through each of the attr processors, see if our element has the matching attribute
@@ -646,4 +640,4 @@ $.extend({
     }
 });
 
-})();
+});

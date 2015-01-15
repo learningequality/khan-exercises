@@ -3,14 +3,14 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Subtracting fractions with common denominators</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
-    <div class="vars">
+    <div class="vars" data-ensure="D > N1 && D !== 100">
         <var id="N1">randRange( 2, 10 )</var>
         <var id="N2">randRange( 1, N1 - 1 )</var>
-        <var id="D">randRange( 10, 20 )</var>
+        <var id="D">randFromArray(denominators)</var>
     </div>
 
     <div class="problems">
@@ -25,19 +25,19 @@
     <div class="hints">
             <div class="graphie" id="pie" style="float: left">
                 init({ range: [ [-3, 3], [-3, 3] ], scale: 25 });
-                PIECH = piechart( [ N1, D - 1 ], ["#e00", "#999"], 2 );
+                PIECH = piechart([N1, D - N1], ["#e00", "#999"], 2);
             </div>
         <div>
             <div class="graphie">
                 init({ range: [ [-3, 3], [-3, 3] ], scale: 25 });
-                piechart( [ N1-N2,N2, D - 1 ], ["#e00","#122", "#999"], 2 );
+                piechart([N1 - N2, N2, D - N1], ["#e00","#122", "#999"], 2);
             </div>
             <p>Subtract the numerators.</p>
         </div>
         <div>
             <div class="graphie">
                 init({ range: [ [-3, 3], [-3, 3] ], scale: 25 });
-                piechart( [ N1 - N2, D - 1 ], ["#e00", "#999"], 2 );
+                piechart([N1 - N2, D - N1 + N2], ["#e00", "#999"], 2);
             </div>
             <p><code><var>fraction( N1, D )</var> - <var>fraction( N2, D )</var> = <var>fraction( N1 - N2, D )</var></code></p>
         </div>
@@ -45,7 +45,8 @@
             <p>Simplify.</p>
             <div class="graphie">
                 init({ range: [ [-3, 3], [-3, 3] ], scale: 25 });
-                piechart( [ reduce(N1 - N2 , D)[0] , reduce(N1 - N2, D)[1] - 1 ], ["#e00", "#999"], 2 );
+                var frac = reduce(N1 - N2 , D);
+                piechart([frac[0], frac[1] - frac[0]], ["#e00", "#999"], 2);
             </div>
             <p><code><var>fraction( N1 - N2, D )</var> = <var>fractionReduce( N1 - N2, D )</var></code></p>
         </div>

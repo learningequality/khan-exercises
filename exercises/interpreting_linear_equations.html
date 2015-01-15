@@ -2,8 +2,8 @@
 <html data-require="math math-format graphie word-problems">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Identifying linear relationships</title>
-    <script src="../khan-exercise.js"></script>
+    <title>Interpreting linear relationships</title>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
@@ -21,8 +21,8 @@
                         "X"
                     ][ INDEX ]</var>
                     <var id="Y_AXIS_LABEL">[
-                        $._("Price of %(unit)s", {unit: plural_form( UNIT )}),
-                        $._("Price of %(unit)s", {unit: plural_form( UNIT )}),
+                        $._("Cost of producing %(unit)s", {unit: plural_form( UNIT )}),
+                        $._("Cost of producing %(unit)s", {unit: plural_form( UNIT )}),
                         "Y"
                     ][ INDEX ]</var>
 
@@ -31,7 +31,9 @@
                 </div>
                 <div class="question">
                     <p data-if="INDEX === 2"><b>How does <code>Y</code> change as <code>X</code> increases?</b></p>
-                    <p data-else><b>How does the price of <var>plural_form(UNIT)</var> change as the number of <var>plural_form(UNIT)</var> increases?</b></p>
+                    <p data-else><b>How does the cost of producing <var>plural_form(UNIT)</var> change as the number of <var>plural_form(UNIT)</var> increases?</b></p>
+                    <div class="render-answer-area-here"></div>
+                    <br/>
                     <div class="graphie" id="grid">
                         init({
                             range: [[-3, 10], [-1, 10]],
@@ -52,7 +54,7 @@
 
                         style({
 
-                            stroke: "#000000",
+                            stroke: BLACK,
                             strokeWidth: 0.9,
                             arrows: "-&gt;"
                         });
@@ -61,7 +63,7 @@
                         label( [ 8.5, 0], "\\text{" + X_AXIS_LABEL + "}", "below");
 
                         style({
-                            stroke: "#6495ED",
+                            stroke: BLUE,
                             strokeWidth: 2,
                             arrows: "-&gt;"
                         });
@@ -81,12 +83,12 @@
                 <div class="hints">
                     <div>
                         <div class="graphie" data-update="grid">
-                            style({ fill: "", stroke: "#000000" });
+                            style({ fill: "", stroke: BLACK });
                             line( [ 4, 4 * M + B ], [ 7, 4 * M + B ] );
-                            style({ stroke: "#40a020" });
+                            style({ stroke: GREEN });
                             line( [ 7, 4 * M + B ], [ 7, 7 * M + B ] );
                         </div>
-                        <p>Looking at the graph, we see that as <code>x</code> increases (<code>\color{#000000}{\text{<var>BLACK_ARROW</var>}}</code>), <code>y</code> also increases (<code>\color{#40a020}{\text{<var>GREEN_ARROW</var>}}</code>).</p>
+                        <p>Looking at the graph, we see that as <code>x</code> increases (<code>\text{<var>BLACK_ARROW</var>}</code>), <code>y</code> also increases (<code>\green{\text{<var>GREEN_ARROW</var>}}</code>).</p>
                     </div>
                     <p>We can say that the slope of the line is positive, or that the variables have a direct relationship.</p>
                     <p data-if="INDEX === 2">Thus, as <code>X</code> increases, <code>Y</code> also <b>increases</b>.</p>
@@ -109,7 +111,7 @@
                             style({ stroke: "#ff0000" });
                             line( [ 7, 4 * M + B ], [ 7, 7 * M + B ] );
                         </div>
-                        <p>Looking at the graph, we see that as <code>x</code> increases (<code>\color{#000000}{\text{<var>BLACK_ARROW</var>}}</code>), <code>y</code> decreases (<code>\color{#ff0000}{\text{<var>RED_ARROW</var>}}</code>).</p>
+                        <p>Looking at the graph, we see that as <code>x</code> increases (<code>\text{<var>BLACK_ARROW</var>}</code>), <code>y</code> decreases (<code>\red{\text{<var>RED_ARROW</var>}}</code>).</p>
                     </div>
                     <p>We can say that the slope of the line is negative, or that the variables have an inverse relationship.</p>
                     <p data-if="INDEX === 2">Thus, as <code>X</code> increases, <code>Y</code> <b>decreases</b>.</p>
@@ -127,120 +129,6 @@
                     <p>We can say that the slope of the line is zero, or that the variables have no correlation.</p>
                     <p data-if="INDEX === 2">Thus, as <code>X</code> increases, <code>Y</code> <b>stays the same</b>.</p>
                     <p data-else>Thus, as the number of <var>plural_form(UNIT)</var> increases, the price of <var>plural_form(UNIT)</var> <b>stays the same</b>.</p>
-                </div>
-            </div>
-
-            <div id="identifypoint" data-weight="7">
-                <!-- Ensure the X and Y deltas of the beginning and end of the line are at least
-                     five. -->
-                <div class="vars" data-ensure="abs( LINESTART[ 0 ] - LINEEND[ 0 ] ) &gt;= 5 &amp;&amp; abs( LINESTART[ 1 ] - LINEEND[ 1 ] ) &gt;= 5">
-                    <!-- When X is the solution ensure that Y isn't 0 and vice versa so that the line
-                         added by the first hint doesn't cover up an axis. -->
-                    <div data-ensure="POINTX === SOLUTION ? POINTY !== 0 : POINTX !== 0">
-                        <var id="POINTX, POINTY">randRange( -9, 9, 2 )</var>
-                        <var id="SOLUTION">randFromArray([ POINTX, POINTY ])</var>
-                    </div>
-
-                    <var id="LINESTART">
-                        (function() {
-                            var lineStartX,
-                                lineStartY;
-
-                            if (randFromArray([ false, true ])) {
-                                lineStartX = randFromArray([ -10, 10 ]);
-                                lineStartY = randRange( -10, 10 );
-                            } else {
-                                lineStartX = randRange( -10, 10 );
-                                lineStartY = randFromArray([ -10, 10 ]);
-                            }
-
-                            return [ lineStartX, lineStartY ];
-                        })()
-                    </var>
-                    <var id="LINEEND">
-                        (function() {
-                            var lineEndX = POINTX,
-                                    lineEndY = POINTY,
-                                    newXDelta,
-                                    newYDelta,
-                                    xDelta = -( LINESTART[ 0 ] - POINTX ),
-                                    yDelta = -( LINESTART[ 1 ] - POINTY );
-
-
-                            // Reduce xDelta and yDelta until their absolute values are less than or equal
-                            // to one.
-                            if ( Math.abs( xDelta ) &gt; Math.abs( yDelta ) ) {
-                                newXDelta = xDelta &gt; 0 ? 1 : -1;
-                                newYDelta = yDelta * newXDelta / xDelta;
-                            } else {
-                                newYDelta = yDelta &gt; 0 ? 1 : -1;
-                                newXDelta = xDelta * newYDelta / yDelta;
-                            }
-
-                            xDelta = newXDelta;
-                            yDelta = newYDelta;
-
-
-                            while ( Math.abs( lineEndX ) &lt; 10 &amp;&amp; Math.abs( lineEndY ) &lt; 10 ) {
-                                lineEndX += xDelta;
-                                lineEndY += yDelta;
-                            }
-
-                            return [ lineEndX, lineEndY ];
-                        })()
-                    </var>
-                </div>
-
-                <div class="question">
-                    <p data-if="POINTX === SOLUTION">What is <code>x</code> when <code>y</code> is <code><var>POINTY</var></code>?</p>
-                    <p data-else="">What is <code>y</code> when <code>x</code> is <code><var>POINTX</var></code>?</p>
-
-                    <div class="graphie" id="graph">
-                        graphInit({
-                            range: 10,
-                            scale: 20,
-                            axisArrows: "&lt;-&gt;",
-                            tickStep: 2,
-                            labelStep: 1,
-                        });
-
-                        label( [ 0, 10], "y", "below right");
-                        label( [ 10, 0], "x", "above left");
-
-                        style({ stroke: '#6495ed' });
-                        line( LINESTART, LINEEND );
-                    </div>
-                </div>
-
-                <div class="hints">
-                    <div>
-                        <div class="graphie" data-update="graph">
-                            var lineStart, lineEnd;
-
-                            if ( POINTX === SOLUTION ) {
-                                lineStart = [ -10, POINTY ];
-                                lineEnd = [ 10, POINTY ];
-                            } else {
-                                lineStart = [ POINTX, -10 ];
-                                lineEnd = [ POINTX, 10 ];
-                            }
-
-                            line( lineStart, lineEnd, {
-                                stroke:          '#28ae7b',
-                                strokeDasharray: '- '
-                            });
-                        </div>
-
-                        <p data-if="POINTX === SOLUTION">The dashed <span style="color: #28ae7b;">green</span> line shows where <code>y</code> is <code><var>POINTY</var></code>.</p>
-                        <p data-else="">The dashed <span style="color: #28ae7b;">green</span> line shows where <code>x</code> is <code><var>POINTX</var></code>.</p>
-                    </div>
-
-                    <p>The <span style="color: #6495ed;">blue</span> and dashed <span style="color: #28ae7b;">green</span> lines meet at <code>(<var>POINTX</var>, <var>POINTY</var>)</code>.</p>
-                    <p data-if="POINTX === SOLUTION">Therefore <code>x</code> is <code><var>SOLUTION</var></code>.</p><p data-else="">Therefore <code>y</code> is <code><var>SOLUTION</var></code>.</p>
-                </div>
-
-                <div class="solution" data-forms="integer" data-type="multiple">
-                    <p><code><var>POINTX === SOLUTION ? 'x' : 'y'</var> =</code> <span class="sol" data-forms="integer"><var>SOLUTION</var></span></p>
                 </div>
             </div>
         </div>

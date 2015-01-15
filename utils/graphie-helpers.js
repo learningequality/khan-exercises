@@ -1,6 +1,10 @@
+define(function(require) {
+
+require("./math-format.js");
+
 // Temporary not really following convention file, see #160
 
-function numberLine(start, end, step, x, y, denominator) {
+window.numberLine = function(start, end, step, x, y, denominator) {
     step = step || 1;
     x = x || 0;
     y = y || 0;
@@ -42,13 +46,15 @@ function numberLine(start, end, step, x, y, denominator) {
         }
     }
     return set;
-}
+};
 
-function piechart(divisions, colors, radius, strokeColor) {
+window.piechart = function(divisions, colors, radius, strokeColor, x, y) {
     var graph = KhanUtil.currentGraph;
     var set = graph.raphael.set();
     var arcColor = strokeColor || "none";
     var lineColor = strokeColor || "#fff";
+    x = x || 0;
+    y = y || 0;
 
     var sum = 0;
     $.each(divisions, function(i, slice) {
@@ -57,21 +63,59 @@ function piechart(divisions, colors, radius, strokeColor) {
 
     var partial = 0;
     $.each(divisions, function(i, slice) {
-        set.push(graph.arc([0, 0], radius, partial * 360 / sum, (partial + slice) * 360 / sum, true, {
-            stroke: arcColor,
-            fill: colors[i]
-        }));
+        if (slice === sum) {
+            set.push(graph.ellipse([x, y], [radius, radius], {
+                stroke: arcColor,
+                fill: colors[i]
+            }));
+        } else {
+            set.push(graph.arc([x, y], radius, partial * 360 / sum, (partial + slice) * 360 / sum, true, {
+                stroke: arcColor,
+                fill: colors[i]
+            }));
+        }
         partial += slice;
     });
 
     for (var i = 0; i < sum; i++) {
-        set.push(graph.line([0, 0], graph.polar(radius, i * 360 / sum), { stroke: lineColor }));
+        var p = graph.polar(radius, i * 360 / sum);
+        set.push(graph.line([x, y], [x + p[0], y + p[1]], { stroke: lineColor }));
     }
 
     return set;
-}
+};
 
-function rectchart(divisions, fills, y, strokes) {
+// Shade a rectangular area with diagonal stripes. We need to use clipRect so
+// that the ends of the diagonal lines are beveled at each end such that they
+// conform to the overall area of the rectangle being shaded. So this actually
+// draws the diagonal stripes over the entire graphie area and uses clipRect to
+// only show them where desired.
+//
+// The pad argument is an optional number of pixels of padding. Positive
+// numbers make the shaded area smaller.
+window.shadeRect = function(x, y, width, height, pad) {
+    var graph = KhanUtil.currentGraph;
+    var set = graph.raphael.set();
+    var x2 = graph.range[0][0];
+    var y1 = graph.range[1][0];
+    var y2 = graph.range[1][1];
+    var x1 = x2 - (y2 - y1) * graph.scale[1] / graph.scale[0];
+    var step = 8 / graph.scale[0];
+    var xpad = (pad || 0) / graph.scale[0];
+    var ypad = (pad || 0) / graph.scale[1];
+
+    while (x1 < graph.range[0][1]) {
+        set.push(graph.line([x1, y1], [x2, y2], {
+            clipRect: [[x + xpad, y + ypad],
+                      [width - 2 * xpad, height - 2 * ypad]]
+        }));
+        x1 += step;
+        x2 += step;
+    }
+    return set;
+};
+
+window.rectchart = function(divisions, fills, y, strokes, shading) {
     var graph = KhanUtil.currentGraph;
     var set = graph.raphael.set();
 
@@ -105,14 +149,33 @@ function rectchart(divisions, fills, y, strokes) {
                     fill: fill
                 }
             ));
+            if (shading && shading[i]) {
+                graph.style({
+                    stroke: "#000",
+                    strokeWidth: 2,
+                    strokeOpacity: 0.5,
+                    fillOpacity: 0,
+                    fill: null
+                }, function() {
+                    // We add or subtract a pixel of padding depending on
+                    // whether there's a stroke. If there is, we only shade
+                    // inside, otherwise we shade over the whole area. That's
+                    // why the last argument to shadeRect is 1 or -1 (the width
+                    // of the stroke is assumed to be 2)
+                    set.push(shadeRect(
+                        x + 2 * unit[0], y + 2 * unit[1],
+                        w - 4 * unit[0], 1 - 4 * unit[1],
+                        (strokes && strokes[i]) ? 1 : -1));
+                });
+            }
             partial += 1;
         }
     });
 
     return set;
-}
+};
 
-function Parabola(lc, x, y) {
+window.Parabola = function(lc, x, y) {
     var leadingCoefficient = lc;
     var x1 = x;
     var y1 = y;
@@ -194,9 +257,9 @@ function Parabola(lc, x, y) {
     this.getDirectrixK = function() {
         return y1 - (1 / (4 * leadingCoefficient));
     };
-}
+};
 
-function redrawParabola(fShowFocusDirectrix) {
+window.redrawParabola = function(fShowFocusDirectrix) {
     var graph = KhanUtil.currentGraph;
     var storage = graph.graph;
     var currParabola = storage.currParabola;
@@ -218,146 +281,158 @@ function redrawParabola(fShowFocusDirectrix) {
     $("#leading-coefficient input").val(leadingCoefficient);
     $("#vertex-x input").val(vertexX);
     $("#vertex-y input").val(vertexY);
-}
+};
 
-function updateParabola(deltaA, deltaX, deltaY, fShowFocusDirectrix) {
+window.updateParabola = function(deltaA, deltaX, deltaY, fShowFocusDirectrix) {
     KhanUtil.currentGraph.graph.currParabola.delta(deltaA, deltaX, deltaY);
     redrawParabola(fShowFocusDirectrix);
-}
+};
 
-function updateFocusDirectrix(deltaX, deltaY, deltaK) {
+window.updateFocusDirectrix = function(deltaX, deltaY, deltaK) {
     KhanUtil.currentGraph.graph.currParabola.deltaFocusDirectrix(deltaX, deltaY, deltaK);
     redrawParabola(true);
-}
+};
 
-function ParallelLines(x1, y1, x2, y2, distance) {
+window.ParallelLineMarkers = function(x, y, rotation) {
+    var graph = KhanUtil.currentGraph;
+    rotation = rotation || 0;
+
+    var s = 8 / graph.scaleVector([1, 1])[0];
+    var x2 = x + 0.75 * s * Math.cos(rotation);
+    var y2 = y + 0.75 * s * Math.sin(rotation);
+    var dx1 = s * Math.cos(rotation + Math.PI / 4);
+    var dy1 = s * Math.sin(rotation + Math.PI / 4);
+    var dx2 = s * Math.cos(rotation - Math.PI / 4);
+    var dy2 = s * Math.sin(rotation - Math.PI / 4);
+
+    graph.path([[x - dx1, y - dy1], [x, y], [x - dx2, y - dy2]]);
+    graph.path([[x2 - dx1, y2 - dy1], [x2, y2], [x2 - dx2, y2 - dy2]]);
+};
+
+// A pair of parallel lines with a line traversing them.
+// Lines are centered on x, y, with a given length and a given distance apart.
+window.ParallelLines = function(x, y, length, distance, rotation) {
     var lowerIntersection;
     var upperIntersection;
     var anchorAngle;
 
-    function stretch(coordArr, dy) {
-        return $.map(coordArr, function(coord, index) {
-            if (index === 0) {
-                var dx = dy / Math.tan(KhanUtil.toRadians(anchorAngle));
-                coord += dx;
-            }
-            if (index === 1) {
-                coord += dy;
-            }
-            return coord;
-        });
-    }
-
-    function labelAngle(coordArr, angles, color, label) {
-        var graph = KhanUtil.currentGraph;
-        var measure = (angles[1] - angles[0]);
-        var bisect = (angles[0] + angles[1]) / 2;
-
-        var radius = 0.6;
-
-        if (measure < 60) { // control for angle label getting squeezed between intersecting lines
-            radius /= Math.sin(KhanUtil.toRadians(measure));
-        }
-
-        var coords = $.map(coordArr, function(coord, index) {
-            if (index === 0) { // x-coordinate
-                return coord + radius * Math.cos(KhanUtil.toRadians(bisect));
-            } else { // y-coordinate
-                return coord + radius * Math.sin(KhanUtil.toRadians(bisect));
-            }
-        });
-
-        graph.label(coords, label.text, label.placement, { color: color });
-    }
+    var dx1 = distance / 2 * Math.cos(rotation + Math.PI / 2);
+    var dy1 = distance / 2 * Math.sin(rotation + Math.PI / 2);
+    var dx2 = length / 2 * Math.cos(rotation);
+    var dy2 = length / 2 * Math.sin(rotation);
+    var labels = {};
 
     this.draw = function() {
         var graph = KhanUtil.currentGraph;
-        graph.line([x1, y1], [x2, y2]);
-        graph.line([x1, y1 + distance], [x2, y2 + distance]);
+        graph.line([x + dx1 + dx2, y + dy1 + dy2], [x + dx1 - dx2, y + dy1 - dy2]);
+        graph.line([x - dx1 + dx2, y - dy1 + dy2], [x - dx1 - dx2, y - dy1 - dy2]);
     };
 
     this.drawMarkers = function(position) {
         var graph = KhanUtil.currentGraph;
-        var pmarkX = (x2 - x1) / 2 + x1;
+        var pmarkX = 0;
+        var pmarkY = 0;
+        var s = 120 / graph.scaleVector([1, 1])[0];
+
         if (position === "right" || (position >= 40 && position <= 140)) {
-            pmarkX = x2 - 55 / graph.scaleVector([1, 1])[0];
+            pmarkX += s * Math.cos(rotation);
+            pmarkY += s * Math.sin(rotation);
         } else if (position === "left") {
-            pmarkX = x1 + 50 / graph.scaleVector([1, 1])[0];
+            pmarkX -= s * Math.cos(rotation);
+            pmarkY -= s * Math.sin(rotation);
         }
-        var pmarkX1 = pmarkX;
-        var pmarkX2 = pmarkX + 5 / graph.scaleVector([1, 1])[0];
-        var pmarkW = 5 / graph.scaleVector([1, 1])[0];
-        var pmarkH = 5 / graph.scaleVector([1, 1])[1];
-        graph.path([[pmarkX1 - pmarkW, y1 + pmarkH],
-            [pmarkX1, y1],
-            [pmarkX1 - pmarkW, y1 - pmarkH]]);
-        graph.path([[pmarkX2 - pmarkW, y1 + pmarkH],
-            [pmarkX2, y1],
-            [pmarkX2 - pmarkW, y1 - pmarkH]]);
-        graph.path([[pmarkX1 - pmarkW, y1 + pmarkH + distance],
-            [pmarkX1, y1 + distance],
-            [pmarkX1 - pmarkW, y1 - pmarkH + distance]]);
-        graph.path([[pmarkX2 - pmarkW, y1 + pmarkH + distance],
-            [pmarkX2, y1 + distance],
-            [pmarkX2 - pmarkW, y1 - pmarkH + distance]]);
+        ParallelLineMarkers(x + dx1 + pmarkX, y + dy1 + pmarkY, rotation);
+        ParallelLineMarkers(x - dx1 + pmarkX, y - dy1 + pmarkY, rotation);
     };
 
     this.drawTransverse = function(angleDeg) {
-        anchorAngle = angleDeg;
         var graph = KhanUtil.currentGraph;
-        var width = distance / Math.tan(KhanUtil.toRadians(anchorAngle));
-        var lowerX = x1 + ((x2 - x1) - width) / 2;
-        var upperX = lowerX + width;
-        lowerIntersection = [lowerX, y1];
-        upperIntersection = [upperX, y1 + distance];
-        graph.line(stretch(lowerIntersection, -0.8), stretch(upperIntersection, 0.8));
+        var angleRad = KhanUtil.toRadians(angleDeg);
+
+        var cosAngle = Math.cos(rotation + angleRad);
+        var sinAngle = Math.sin(rotation + angleRad);
+        var dx3 = 0.5 * length * cosAngle;
+        var dy3 = 0.5 * length * sinAngle; 
+        graph.line([x + dx3, y + dy3], [x - dx3, y - dy3]);
+
+        // Find intersections
+        var hypot = 0.5 * distance / Math.cos(Math.PI / 2 - angleRad);
+        var dx4 = hypot * cosAngle;
+        var dy4 = hypot * sinAngle;
+
+        upperIntersection = [x + dx4, y + dy4];
+        lowerIntersection = [x - dx4, y - dy4];
+        anchorAngle = angleDeg;
     };
 
-    this.drawAngle = function(index, label, color) {
+    function labelAngle(index, coords, angles, color, text) {
+        var graph = KhanUtil.currentGraph;
+        var measure = (angles[1] - angles[0]);
+        var bisect = KhanUtil.toRadians(angles[0] + measure / 2);
+        var radius = 0.7;
 
-        var graph = KhanUtil.currentGraph,
-            radius = 0.5,
-            args, angles;
-
-        color || (color = "#6495ED");
-        index = (index + 8) % 8;
-        if (index < 4) {
-            args = [lowerIntersection, radius];
-        } else {
-            args = [upperIntersection, radius];
+        if (measure < 70) { // control for angle label getting squeezed between intersecting lines
+            radius /= Math.cos(KhanUtil.toRadians(70 - measure));
         }
 
-        var labelPlacement;
+        var dx = radius * Math.cos(bisect);
+        var dy = radius * Math.sin(bisect);
+        var placement = "center";
+
+        if (typeof text === "boolean") {
+            text = (angles[1] - angles[0]) + "^\\circ";
+        }
+
+        // Slightly hacky way to align the equations in vertical_angles_2
+        if (text.length > 10 && Math.abs(dx) > 0.25) {
+            dx *= 0.6;
+            dy *= 0.8;
+            placement = dx > 0 ? "right" : "left";
+        }
+
+        // Remove old label
+        if (labels[index]) {
+            labels[index].remove();
+        }
+
+        labels[index] = graph.label([coords[0] + dx, coords[1] + dy], text, placement, { color: color });
+    }
+
+    this.drawAngle = function(index, label, color) {
+        var graph = KhanUtil.currentGraph;
+        var radius = 0.4;
+
+        color = color || KhanUtil.BLUE;
+        index = (index + 8) % 8;
+        var args = index < 4 ? [lowerIntersection, radius] : [upperIntersection, radius];
+
+        var angles = [KhanUtil.toDegrees(rotation), KhanUtil.toDegrees(rotation)];
         switch (index % 4) {
             case 0: // Quadrant 1
-                angles = [0, anchorAngle];
-                labelPlacement = "right";
+                angles[1] += anchorAngle;
                 break;
             case 1: // Quadrant 2
-                angles = [anchorAngle, 180];
-                labelPlacement = "left";
+                angles[0] += anchorAngle;
+                angles[1] += 180;
                 break;
             case 2: // Quadrant 3
-                angles = [180, 180 + anchorAngle];
-                labelPlacement = "left";
+                angles[0] += 180;
+                angles[1] += 180 + anchorAngle;
                 break;
             case 3: // Quadrant 4
-                angles = [180 + anchorAngle, 360];
-                labelPlacement = "right";
+                angles[0] += 180 + anchorAngle;
+                angles[1] += 360;
                 break;
         }
         $.merge(args, angles);
 
         graph.style({ stroke: color}, function() {
-            graph.arc.apply(graph, args);
+            if (!labels[index]) {
+                graph.arc.apply(graph, args);
+            }
+
             if (label) {
-                var labelOptions = { text: label, placement: labelPlacement};
-
-                if (typeof label === "boolean") {
-                    labelOptions.text = (angles[1] - angles[0]) + "^\\circ";
-                }
-
-                labelAngle(args[0], angles, color, labelOptions);
+                labelAngle(index, args[0], angles, color, label);
             }
         });
     };
@@ -382,9 +457,9 @@ function ParallelLines(x1, y1, x2, y2, distance) {
         this.drawAngle(adj1, label, color);
         this.drawAngle(adj2, label, color);
     };
-}
+};
 
-function drawComplexChart(radius, denominator) {
+window.drawComplexChart = function(radius, denominator) {
     var graph = KhanUtil.currentGraph;
     var safeRadius = radius * Math.sqrt(2);
     var color = "#ddd";
@@ -414,9 +489,9 @@ function drawComplexChart(radius, denominator) {
 
     graph.label([radius, 0.5], "Re", "left");
     graph.label([0.5, radius - 1], "Im", "right");
-}
+};
 
-function ComplexPolarForm(angleDenominator, maxRadius, euler) {
+window.ComplexPolarForm = function(angleDenominator, maxRadius, euler) {
     var denominator = angleDenominator;
     var maximumRadius = maxRadius;
     var angle = 0, radius = 1;
@@ -472,7 +547,7 @@ function ComplexPolarForm(angleDenominator, maxRadius, euler) {
             fill: KhanUtil.ORANGE,
             stroke: "none"
         });
-    },
+    };
 
     this.redraw = function() {
         if (circle) {
@@ -480,14 +555,14 @@ function ComplexPolarForm(angleDenominator, maxRadius, euler) {
         }
         this.plot();
     };
-}
+};
 
-function updateComplexPolarForm(deltaAngle, deltaRadius) {
+window.updateComplexPolarForm = function(deltaAngle, deltaRadius) {
     KhanUtil.currentGraph.graph.currComplexPolar.delta(deltaAngle, deltaRadius);
     redrawComplexPolarForm();
-}
+};
 
-function redrawComplexPolarForm(angle, radius) {
+window.redrawComplexPolarForm = function(angle, radius) {
     var graph = KhanUtil.currentGraph;
     var storage = graph.graph;
     var point = storage.currComplexPolar;
@@ -507,9 +582,9 @@ function redrawComplexPolarForm(angle, radius) {
     $("#number-label").html("<code>" + equation + "</code>").runModules();
     $("#current-radius").html("<code>" + radius + "</code>").runModules();
     $("#current-angle").html("<code>" + KhanUtil.piFraction(angle, true) + "</code>").runModules();
-}
+};
 
-function labelDirection(angle) {
+window.labelDirection = function(angle) {
     angle = angle % 360;
     if (angle === 0) {
         return "right";
@@ -528,11 +603,11 @@ function labelDirection(angle) {
     } else if (angle > 270 && angle < 360) {
         return "below right";
     }
-}
+};
 
 // arc orientation is "top"|"left"|"bottom"|"right".
 // arrow direction is clockwise (true) or counter-clockwise (false)
-function curvyArrow(center, radius, arcOrientation, arrowDirection, styles) {
+window.curvyArrow = function(center, radius, arcOrientation, arrowDirection, styles) {
     styles = styles || {};
     var graph = KhanUtil.currentGraph;
     var set = graph.raphael.set();
@@ -566,9 +641,9 @@ function curvyArrow(center, radius, arcOrientation, arrowDirection, styles) {
     }
     set.push(graph.line(from, to, _.extend({arrows: "->"}, styles)));
     return set;
-}
+};
 
-function curlyBrace(startPointGraph, endPointGraph) {
+window.curlyBrace = function(startPointGraph, endPointGraph) {
     var graph = KhanUtil.currentGraph;
 
     var startPoint = graph.scalePoint(startPointGraph);
@@ -618,4 +693,6 @@ function curlyBrace(startPointGraph, endPointGraph) {
     brace.rotate(angle);
     brace.translate(midPoint[0], midPoint[1]);
     return brace;
-}
+};
+
+});

@@ -43,7 +43,8 @@ rescue LoadError
   $stderr.puts
   $stderr.puts "-" * 78
   $stderr.puts "Oops! Some gems are missing; please run:"
-  $stderr.puts "  sudo gem install json nokogiri uglifier therubyracer"
+  $stderr.puts "  sudo gem install json nokogiri therubyracer"
+  $stderr.puts "  sudo gem install uglifier --version 1.3.0"
   $stderr.puts "-" * 78
   $stderr.puts
   exit 1
@@ -98,9 +99,23 @@ def jshint(js)
   end
 end
 
-def uglify(js)
+def uglify(js, options)
+  # Minifying single-line expressions isn't necessary for IE8 correctness; skip
   if js =~ /\n/
-    return @uglifier.compile(js)    
+    if options[:expr]
+      # To prevent uglifier from throwing away the "dead code", wrap it in a
+      # function call
+      js = "__khan_exercises_expression__(#{js})"
+      compiled = @uglifier.compile(js)
+      match = compiled.match(/^__khan_exercises_expression__\((.*)\);$/)
+      if match
+        return match[1]
+      else
+        uglifier_insane(compiled)
+      end
+    else
+      return @uglifier.compile(js)
+    end
   else
     return js
   end
@@ -110,13 +125,18 @@ end
 Dir.chdir(File.join(File.dirname(__FILE__), ".."))
 
 @uglifier = Uglifier.new(:copyright => false)  # Discard all comments
-@jshint = ExecJS.compile(File.read("build/jshint.js"))
+@jshint = ExecJS.compile(File.read("build/third_party/jshint.js"))
 
-def uglifier_insane
+def uglifier_insane(output)
+  $stderr.puts "-- unexpected uglifier output: " + output.inspect
   $stderr.puts
   $stderr.puts "-" * 78
   $stderr.puts "Error! The uglifier gem is doing weird things that we don't expect."
   $stderr.puts "Stopping now so that the children can keep learning."
+  $stderr.puts
+  $stderr.puts "Try this:"
+  $stderr.puts "  sudo gem uninstall uglifier"
+  $stderr.puts "  sudo gem install uglifier --version 2.3.1"
   $stderr.puts "-" * 78
   $stderr.puts
   exit 1
@@ -124,18 +144,20 @@ end
 
 # uglifier sanity check
 [
-  ["(A + B)", ["A+B", "A+B;"]],
-  ["(function() { return 5; })", ["(function(){return 5})", "(function(){return 5});"]],
+  ["__khan_exercises_expression__(A + B)", "__khan_exercises_expression__(A+B);"],
+  ["(function() { return 5; })()", "!function(){return 5}();"],
 ].each do |input, expected|
   output = @uglifier.compile(input)
-  uglifier_insane unless expected.include? output
+  unless output == expected
+    uglifier_insane(output)
+  end
 end
 
 def pack_file(file_contents)
   # Can specify a filename either on the commandline or piped into stdin
   doc = Nokogiri::HTML::Document.parse(file_contents)
 
-  doc.css("var").each do |var|
+  doc.css("var", "div.guess").each do |var|
     if var.elements.any?
       $stderr.puts "-- error: JS element has children"
       $stderr.puts var.inner_html
@@ -145,21 +167,20 @@ def pack_file(file_contents)
     next if var.content !~ /\S/ # only whitespace
 
     jshint("return (#{var.content});")
-    exp = "(#{var.content})"
-    var.content = uglify(exp).gsub(/;$/, "")
+    var.content = uglify(var.content, :expr => true).gsub(/;$/, "")
   end
 
-  doc.css(".graphie", "div.guess", "div.show-guess", "div.show-guess-solutionarea").each do |graphie|
+  doc.css(".graphie", "div.show-guess", "div.show-guess-solutionarea").each do |graphie|
     if graphie.elements.any?
       $stderr.puts "-- error: JS element has children"
       exit 1
     end
 
     js = graphie.content
-    graphie.content = uglify(js).gsub(/;$/, "")
+    graphie.content = uglify(js, :expr => false).gsub(/;$/, "")
   end
 
-  doc.css("div.validator-function").each do |validator|
+  doc.css(".validator-function").each do |validator|
     if validator.elements.any?
       $stderr.puts "-- error: JS element has children"
       exit 1
@@ -168,14 +189,14 @@ def pack_file(file_contents)
     # Need to wrap validator-function content in a function, so uglifier
     # doesn't get confused by the estranged 'return' statement
     js = "(function(){" + validator.content + "})()"
-    uglified = uglify(js)
+    uglified = uglify(js, :expr => false)
 
     # Strip out the anonymous function wrapper to put things back the way they were
-    match = uglified.match(/^\(function\(\)\{(.*)\}\)\(\);?$/)
+    match = uglified.match(/^!function\(\)\{(.*)\}\(\);$/)
     if match
       validator.content = match[1]
     else
-      uglifier_insane
+      uglifier_insane(uglified)
     end
   end
 
@@ -183,7 +204,7 @@ def pack_file(file_contents)
     doc.css("[#{data_attr}]").each do |el|
       jshint("return (#{el[data_attr]});")
       js = el[data_attr]
-      el[data_attr] = uglify(js).gsub(/;$/, "")
+      el[data_attr] = uglify(js, :expr => true).gsub(/;$/, "")
     end
   end
 

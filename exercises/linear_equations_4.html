@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Solving rational equations 1</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
@@ -16,7 +16,7 @@
 
         <div class="problems">
             <div id="integer">
-                <div class="vars">
+                <div class="vars" data-ensure="DENOMINATOR.evaluate(FINALCONST / FINALCOEFF)  !== 0">
                     <var id="NUMERCOEFF">NUMERCONST &lt; 1 ? randRange(1, 5) : randRange(0, 5)</var>
                     <div data-ensure="SIGN * NUMERCOEFF !== CONSTANT * DENOMCOEFF">
                         <var id="CONSTANT">randRange(2, 10)</var>
@@ -44,7 +44,10 @@
                         </code></p>
                     </div>
 
-                    <p><code><var>NUMERATOR.multiply(SIGN)</var> = <var>PRODUCT</var></code></p>
+                    <div>
+                        <p data-if="SIGN === -1"><code>-(<var>NUMERATOR</var>) = <var>PRODUCT</var></code></p>
+                        <p><code><var>NUMERATOR.multiply(SIGN)</var> = <var>PRODUCT</var></code></p>
+                    </div>
 
                     <div data-if="SIGN * NUMERCOEFF - CONSTANT * DENOMCOEFF > 0">
                         <p><code><var>new RationalExpression([[FINALCOEFF, X], SIGN * NUMERCONST])</var> = <var>DENOMCONST * CONSTANT</var></code></p>
@@ -71,7 +74,7 @@
             </div>
 
             <div id="fraction">
-                <div class="vars" data-ensure="!NUMERATOR.divide(DENOMINATOR)">
+                <div class="vars" data-ensure="!NUMERATOR.divide(DENOMINATOR) && abs(DENOMINATOR.evaluate(FINALCONST / FINALCOEFF)) > 0.0001">
                     <var id="NUMERCOEFF">NUMERCONST &lt; 1 ? randRange(1, 5) : randRange(0, 5)</var>
                     <div data-ensure="DENOMCOEFF !== SIGN * NUMERCOEFF * CONSTANT">
                         <var id="CONSTANT">randRange(2, 10)</var>
@@ -123,7 +126,7 @@
                         <p><code><var>new Term(-FINALCOEFF, X)</var> = <var>-FINALCONST</var></code></p>
                     </div>
 
-                    <p><code><var>X</var> = <var>fraction(FINALCONST, FINALCOEFF)</var></code></p>
+                    <p data-if="FINALCOEFF !== -1"><code><var>X</var> = <var>fraction(FINALCONST, FINALCOEFF)</var></code></p>
 
                     <div data-if="FINALCOEFF !== 1 && getGCD(FINALCONST, FINALCOEFF) !== 1">
                         <p>Simplify.</p>
@@ -134,7 +137,9 @@
             </div>
         </div>
 
-        <div class="solution"><var>FINALCONST / FINALCOEFF</var></div>
+        <div class="solution" data-type="multiple">
+            <p><code><var>X</var> =</code> <span class="sol"><var>FINALCONST / FINALCOEFF</var></span>
+        </div>
 
         <div class="hints">
             <p>Multiply both sides of the equation by <code><var>DENOMINATOR</var></code>.</p>

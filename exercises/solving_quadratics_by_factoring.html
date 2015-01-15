@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Solving quadratics by factoring</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
@@ -22,7 +22,6 @@
                 <var id="SIMPLECONSTANT">A*B</var>
                 <var id="LINEAR">SQUARE*(-A-B)</var>
                 <var id="SIMPLELINEAR">-A-B</var>
-                <var id="AND_TEXT">$._("and")</var>
             </div>
 
             <p class="question">Solve for <code>x</code>:</p>
@@ -31,9 +30,10 @@
             <div class="solution" data-type="set">
                 <div class="set-sol"><var>A</var></div>
                 <div class="set-sol"><var>B</var></div>
-                <div class="input-format"><p style="font-size: 12px;">
-                    <code>x = {}</code><span class="entry short35" data-forms="integer"></span><code>\space \text{<var>AND_TEXT</var>}\space x = {}</code><span class="entry short35" data-forms="integer"></span>
-                </p></div>
+                <div class="input-format">
+                    <code>x = {}</code><span class="entry short35" data-forms="integer"></span>
+                    and <code>x = {}</code><span class="entry short35" data-forms="integer"></span>
+                </div>
             </div>
 
             <div class="hints" data-apply="appendContents">

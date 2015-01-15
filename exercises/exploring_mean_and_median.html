@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Exploring mean and median</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
@@ -117,7 +117,6 @@
                 </div>
                 <div class="solution" data-type="custom">
                     <div class="instruction">
-                        Move the orange dots to select your answer.
                     </div>
                     <div class="guess">$.map(graph.points, function(el) {
                             return el.coord[0];
@@ -137,10 +136,6 @@
                             onMovePoint(graph.points[i], x, 0);
                         });
                         updateMeanAndMedian();
-                    </div>
-                    <div class="example">
-                        any arrangement of the orange dots so that the mean
-                        and median are correct
                     </div>
                 </div>
 

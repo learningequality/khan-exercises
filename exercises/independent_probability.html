@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Independent probability</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
@@ -65,30 +65,30 @@
 
             <div class="hints">
                 <p>
-                    Flipping a <var>HT</var> and rolling <var>RESULT_DESC</var> are independent events: they don't affect each other. So, to get the 
+                    Flipping a <var>HT</var> and rolling <var>RESULT_DESC</var> are independent events: they don't affect each other. So, to get the
                     probability of both happening, we just need to multiply the probability of one by the probability of the other.
                 </p>
                 <p>
                     The probability of flipping a <var>HT</var> is <code>\dfrac{1}{2}</code>.
                 </p>
                 <p data-if="RESULT_POSSIBLE.length > 1"><span data-if="isSingular(RESULT_POSSIBLE.length)" data-unwrap="">
-                    The probability of rolling <var>RESULT_DESC</var> is <code>\dfrac{<var>RESULT_POSSIBLE.length</var>}{6}</code>, since there 
-                    is <var>RESULT_POSSIBLE.length</var> outcome 
+                    The probability of rolling <var>RESULT_DESC</var> is <code>\dfrac{<var>RESULT_POSSIBLE.length</var>}{6}</code>, since there
+                    is <var>RESULT_POSSIBLE.length</var> outcome
                     which satisfy our condition
                     (namely, <var>toSentence(RESULT_POSSIBLE)</var>), and 6 total possible outcomes.
                 </span><span data-else="" data-unwrap="">
-                    The probability of rolling <var>RESULT_DESC</var> is <code>\dfrac{<var>RESULT_POSSIBLE.length</var>}{6}</code>, since there 
-                    are <var>RESULT_POSSIBLE.length</var> outcomes 
+                    The probability of rolling <var>RESULT_DESC</var> is <code>\dfrac{<var>RESULT_POSSIBLE.length</var>}{6}</code>, since there
+                    are <var>RESULT_POSSIBLE.length</var> outcomes
                     which satisfy our condition
                     (namely, <var>toSentence(RESULT_POSSIBLE)</var>), and 6 total possible outcomes.
                 </span></p><p data-else=""><span data-if="isSingular(RESULT_POSSIBLE.length)" data-unwrap="">
-                    The probability of rolling <var>RESULT_DESC</var> is <code>\dfrac{<var>RESULT_POSSIBLE.length</var>}{6}</code>, since there 
-                    is <var>RESULT_POSSIBLE.length</var> outcome 
+                    The probability of rolling <var>RESULT_DESC</var> is <code>\dfrac{<var>RESULT_POSSIBLE.length</var>}{6}</code>, since there
+                    is <var>RESULT_POSSIBLE.length</var> outcome
                     which satisfies our condition
                     (namely, <var>toSentence(RESULT_POSSIBLE)</var>), and 6 total possible outcomes.
                 </span><span data-else="" data-unwrap="">
-                    The probability of rolling <var>RESULT_DESC</var> is <code>\dfrac{<var>RESULT_POSSIBLE.length</var>}{6}</code>, since there 
-                    are <var>RESULT_POSSIBLE.length</var> outcomes 
+                    The probability of rolling <var>RESULT_DESC</var> is <code>\dfrac{<var>RESULT_POSSIBLE.length</var>}{6}</code>, since there
+                    are <var>RESULT_POSSIBLE.length</var> outcomes
                     which satisfies our condition
                     (namely, <var>toSentence(RESULT_POSSIBLE)</var>), and 6 total possible outcomes.
                 </span></p>
@@ -129,25 +129,27 @@
                 </var>
                 <var id="ALL">random() &lt; 0.5</var>
                 <var id="PLAYER,PR">randFromArray(FREE_THROWS)</var>
-                <var id="PROB">ALL ? PR : localeToFixed(1-PR, 2)</var>            
+                <var id="PROB">ALL ? PR : roundTo(2, 1-PR)</var>
+                <var id="PROB10">PROB * 10</var>
+                <var id="PROB_CUBED">pow(PROB, 3)</var>
                 <var id="STREAK">randRange(4,9)</var>
                 <var id="SINGLE_PCT">localeToFixed(PROB * 100, 0)</var>
                 <var id="TWO_PCT">localeToFixed(pow(PROB,2) * 100, 0)</var>
                 <var id="THREE_PCT">
-                    (pow(PROB,3) * 100) &lt; 0.5 ? 
+                    (pow(PROB,3) * 100) &lt; 0.5 ?
                     localeToFixed(pow(PROB,3) * 100, 1) :
                     localeToFixed(pow(PROB,3) * 100, 0)
                 </var>
                 <var id="OPTIONS">shuffle(
-                    [PR + "^" + STREAK,
-                     STREAK + " \\cdot" + PR,
-                     STREAK + " \\cdot" + "(1 - " + PR + ")",
-                     "(1 - " + PR + ")^" + STREAK])
+                    [localeToFixed(PR, 2) + "^" + STREAK,
+                     STREAK + " \\cdot" + localeToFixed(PR, 2),
+                     STREAK + " \\cdot" + "(1 - " + localeToFixed(PR, 2) + ")",
+                     "(1 - " + localeToFixed(PR, 2) + ")^" + STREAK])
                  </var>
                  <var id="ANS">
-                    ALL ? 
-                    PR + "^" + STREAK :
-                    "(1 - " + PR + ")^" + STREAK
+                    ALL ?
+                    localeToFixed(PR, 2) + "^" + STREAK :
+                    "(1 - " + localeToFixed(PR, 2) + ")^" + STREAK
                 </var>
             </div>
 
@@ -158,20 +160,20 @@
             </p>
 
             <p class="question"><span data-if="ALL" data-unwrap="">
-                What is the probability of <var>PLAYER</var> making ALL of his next
+                What is the probability of <var>PLAYER</var> making all of his next
                 <var>STREAK</var> free throw attempts?
             </span><span data-else="" data-unwrap="">
-                What is the probability of <var>PLAYER</var> making NONE of his next
+                What is the probability of <var>PLAYER</var> making none of his next
                 <var>STREAK</var> free throw attempts?
             </span></p>
 
-            <div class="solution"><code><var>ANS</var></code></div>
+            <div class="solution"><code>\large{<var>ANS</var>}</code></div>
 
             <ul class="choices" data-show="4">
-                <li><code><var>OPTIONS[0]</var></code></li>
-                <li><code><var>OPTIONS[1]</var></code></li>
-                <li><code><var>OPTIONS[2]</var></code></li>
-                <li><code><var>OPTIONS[3]</var></code></li>
+                <li><code>\large{<var>OPTIONS[0]</var>}</code></li>
+                <li><code>\large{<var>OPTIONS[1]</var>}</code></li>
+                <li><code>\large{<var>OPTIONS[2]</var>}</code></li>
+                <li><code>\large{<var>OPTIONS[3]</var>}</code></li>
             </ul>
 
             <div class="hints">
@@ -186,15 +188,15 @@
 
                         line([0, 0], [10, 0]);
                         line([10,-0.2], [10,0.2]);
-                        label([PROB*10,-0.53], SINGLE_PCT + "\\%", "center");
+                        label([PROB10,-0.53], SINGLE_PCT + "\\%", "center");
 
                         style({ stroke: "BLUE", strokeWidth: 3 });
                         line([0,-0.2], [0,0.2]);
-                        line([0,0], [PROB*10,0]);
-                        line([PROB*10,-0.2], [PROB*10,0.2]);
+                        line([0,0], [PROB10,0]);
+                        line([PROB10,-0.2], [PROB10,0.2]);
                     </div>
                     <p>Then <code><var>SINGLE_PCT</var> \%</code> of
-                    the time he makes his first shot, he will also make his second shot, and 
+                    the time he makes his first shot, he will also make his second shot, and
                     <code><var>localeToFixed((1-PROB)*100, 0)</var> \%</code> of the time he makes his
                     first shot, he will miss his second shot.</p>
                     <div class="graphie">
@@ -205,32 +207,34 @@
                         line([0, 0], [10, 0]);
 
                         line([10,-0.2], [10,0.2]);
-                        label([PROB*10, -0.53], SINGLE_PCT + "\\%", "center");
+                        label([PROB10, -0.53], SINGLE_PCT + "\\%", "center");
 
-                        style({ stroke: "ORANGE", strokeWidth: 3 });
+                        style({ stroke: "#888", strokeWidth: 3 });
+                        line([PROB * PROB10,0], [PROB10,0]);
+                        line([PROB10,-0.2], [PROB10,0.2]);
+
+                        style({ stroke: "PURPLE", strokeWidth: 3 });
                         line([0,-0.2], [0,0.2]);
-                        line([0,0], [PROB*PROB*10,0]);
-                        line([PROB*PROB*10,-0.2], [PROB*PROB*10,0.2]);
-
-                        style({ stroke: "PINK", strokeWidth: 3 });
-                        line([PROB*PROB*10,0], [PROB*10,0]);
-                        line([PROB*10,-0.2], [PROB*10,0.2]);
+                        line([0,0], [PROB * PROB10,0]);
+                        line([PROB * PROB10,-0.2], [PROB * PROB10,0.2]);
                     </div>
                 </div>
                 <p>
                     Notice how we can completely ignore the rightmost section of the line now, because those were the times that
-                    he missed the first free throw, and we only care about if he makes the first <b>and</b> the second. 
+                    he missed the first free throw, and we only care about if he makes the first <b>and</b> the second.
                     So the chance of making <b>two</b> free throws in a row is <code><var>SINGLE_PCT</var>\%</code> of the times
                     that he made the first shot, which happens <code><var>SINGLE_PCT</var>\%</code> of the time in general.
                 </p>
                 <p>
                     This is <code><var>SINGLE_PCT</var>\% \cdot <var>SINGLE_PCT</var>\%</code>, or
-                    <code><var>PROB</var> \cdot <var>PROB</var> = <var>localeToFixed(PROB*PROB, 3)</var></code>.
+                    <code><var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB, 2)</var> \approx <var>localeToFixed(PROB*PROB, 3)</var></code>.
                 </p>
                 <div>
-                    <p>We can repeat this process again to get the probability of making <b>three</b> free throws in a row. We simply take
-                    <code><var>SINGLE_PCT</var>\%</code> of probability that he makes two in a row, which we know from the previous step is
-                    <code><var>localeToFixed(PROB*PROB, 3)</var> \approx \orange{<var>TWO_PCT</var>\%}</code>.</p>
+                    <p>
+                        We can repeat this process again to get the probability of making <b>three</b> free throws in a row. We simply take
+                        <code><var>SINGLE_PCT</var>\%</code> of probability that he makes two in a row, which we know from the previous step is
+                        <code><var>localeToFixed(PROB*PROB, 3)</var> \approx \purple{<var>TWO_PCT</var>\%}</code>.
+                    </p>
                     <div class="graphie">
                         init({
                             range: [[-1, 11], [-1, 1]]
@@ -238,18 +242,21 @@
 
                         line([0, 0], [10, 0]);
                         line([10,-0.2], [10,0.2]);
-                        label([PROB*10, -0.53], SINGLE_PCT + "\\%", "center");
-                        line([PROB*10,-0.2], [PROB*10,0.2]);
-                        label([PROB*PROB*10, -0.53], TWO_PCT + "\\%", "center");
+                        label([PROB10, -0.53], SINGLE_PCT + "\\%", "center");
+                        line([PROB10,-0.2], [PROB10,0.2]);
+                        label([PROB * PROB10, -0.53], TWO_PCT + "\\%", "center");
 
-                        style({ stroke: "ORANGE", strokeWidth: 3 });
+                        style({ stroke: "PURPLE", strokeWidth: 3 });
                         line([0,-0.2], [0,0.2]);
-                        line([0,0], [PROB*PROB*10,0]);
-                        line([PROB*PROB*10,-0.2], [PROB*PROB*10,0.2]);
+                        line([0,0], [PROB * PROB10,0]);
+                        line([PROB * PROB10,-0.2], [PROB * PROB10,0.2]);
                     </div>
-                    <p><code><var>SINGLE_PCT</var>\%</code> of <code>\orange{<var>TWO_PCT</var>\%}</code> is 
-                    <code><var>PROB</var> \cdot <var>localeToFixed(PROB*PROB, 3)</var> = <var>localeToFixed(Math.pow(PROB,3), 3)</var></code>, or
-                    about <code>\green{<var>THREE_PCT</var>\%}</code>:</p>
+                    <p>
+                        <code><var>SINGLE_PCT</var>\%</code> of <code>\purple{<var>TWO_PCT</var>\%}</code> is
+                        <code><var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB * PROB, 3)</var> \approx 
+                        <var>localeToFixed(PROB_CUBED, 3)</var></code>, or
+                        about <code>\green{<var>THREE_PCT</var>\%}</code>:
+                    </p>
                     <div class="graphie">
                         init({
                             range: [[-1, 11], [-1, 1]]
@@ -257,33 +264,33 @@
 
                         line([0, 0], [10, 0]);
                         line([10,-0.2], [10,0.2]);
-                        label([PROB*10, -0.53], SINGLE_PCT + "\\%", "center");
-                        line([PROB*10,-0.2], [PROB*10,0.2]);
-                        label([PROB*PROB*10, -0.53], TWO_PCT + "\\%", "center");
-                        label([Math.pow(PROB,3)*10, -0.53], THREE_PCT + "\\%", "center");
+                        label([PROB10, -0.53], SINGLE_PCT + "\\%", "center");
+                        line([PROB10,-0.2], [PROB10,0.2]);
+                        label([PROB*PROB10, -0.53], TWO_PCT + "\\%", "center");
+                        label([PROB_CUBED*10, -0.53], THREE_PCT + "\\%", "center");
+
+                        style({ stroke: "#888", strokeWidth: 3 });
+                        line([PROB_CUBED * 10,0], [PROB * PROB10,0]);
+                        line([PROB * PROB10,-0.2], [PROB * PROB10,0.2]);
 
                         style({ stroke: "GREEN", strokeWidth: 3 });
                         line([0,-0.2], [0,0.2]);
-                        line([0,0], [Math.pow(PROB,3)*10,0]);
-                        line([Math.pow(PROB,3)*10,-0.2], [Math.pow(PROB,3)*10,0.2]);
-
-                        style({ stroke: "PINK", strokeWidth: 3 });
-                        line([Math.pow(PROB,3)*10,0], [PROB*PROB*10,0]);
-                        line([PROB*PROB*10,-0.2], [PROB*PROB*10,0.2]);
+                        line([0,0], [PROB_CUBED*10,0]);
+                        line([PROB_CUBED*10,-0.2], [PROB_CUBED*10,0.2]);
                     </div>
                 </div>
                 <p>
                     There is a pattern here: the chance of making two free throws in a row was
-                    <code><var>PROB</var> \cdot <var>PROB</var></code>, and the probability of making 
-                    three in a row was <code><var>PROB</var> \cdot <var>localeToFixed(PROB*PROB, 3)</var> = 
-                    <var>PROB</var> \cdot (<var>PROB</var> \cdot <var>PROB</var>)
-                    = <var>PROB</var>^3</code>.
+                    <code><var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB, 2)</var></code>, and the probability of making
+                    three in a row was <code><var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB * PROB, 3)</var> =
+                    <var>localeToFixed(PROB, 2)</var> \cdot (<var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB, 2)</var>)
+                    = <var>localeToFixed(PROB, 2)</var>^3</code>.
                 </p>
                 <p>
                     In general, you can continue in this way to find the probability of making any number of shots.
                 </p>
                 <p>
-                    The probability of making <var>STREAK</var> free throws in a row is <code><var>PROB</var> ^ <var>STREAK</var></code>.
+                    The probability of making <var>STREAK</var> free throws in a row is <code><var>localeToFixed(PROB, 2)</var> ^ <var>STREAK</var></code>.
                 </p>
             </div>
             <div data-else="" data-unwrap="">
@@ -298,17 +305,19 @@
 
                         line([0, 0], [10, 0]);
                         line([10,-0.2], [10,0.2]);
-                        label([PROB*10,-0.53], SINGLE_PCT + "\\%", "center");
+                        label([PROB10,-0.53], SINGLE_PCT + "\\%", "center");
 
                         style({ stroke: "BLUE", strokeWidth: 3 });
                         line([0,-0.2], [0,0.2]);
-                        line([0,0], [PROB*10,0]);
-                        line([PROB*10,-0.2], [PROB*10,0.2]);
+                        line([0,0], [PROB10,0]);
+                        line([PROB10,-0.2], [PROB10,0.2]);
                     </div>
-                    <p>Then <code><var>SINGLE_PCT</var> \%</code> of
-                    the time he misses his first shot, he will also miss his second shot, and 
-                    <code><var>localeToFixed((1-PROB)*100, 0)</var> \%</code> of the time he misses his
-                    first shot, he will make his second shot.</p>
+                    <p>
+                        Then <code><var>SINGLE_PCT</var> \%</code> of
+                        the time he misses his first shot, he will also miss his second shot, and
+                        <code><var>localeToFixed((1-PROB)*100, 0)</var> \%</code> of the time he misses his
+                        first shot, he will make his second shot.
+                    </p>
                     <div class="graphie">
                         init({
                             range: [[-1, 11], [-1, 1]]
@@ -317,32 +326,35 @@
                         line([0, 0], [10, 0]);
 
                         line([10,-0.2], [10,0.2]);
-                        label([PROB*10, -0.53], SINGLE_PCT + "\\%", "center");
+                        label([PROB10, -0.53], SINGLE_PCT + "\\%", "center");
 
-                        style({ stroke: "ORANGE", strokeWidth: 3 });
+                        style({ stroke: "#888", strokeWidth: 3 });
+                        line([PROB * PROB10,0], [PROB10,0]);
+                        line([PROB10,-0.2], [PROB10,0.2]);
+
+                        style({ stroke: "PURPLE", strokeWidth: 3 });
                         line([0,-0.2], [0,0.2]);
-                        line([0,0], [PROB*PROB*10,0]);
-                        line([PROB*PROB*10,-0.2], [PROB*PROB*10,0.2]);
-
-                        style({ stroke: "PINK", strokeWidth: 3 });
-                        line([PROB*PROB*10,0], [PROB*10,0]);
-                        line([PROB*10,-0.2], [PROB*10,0.2]);
+                        line([0,0], [PROB * PROB10,0]);
+                        line([PROB * PROB10,-0.2], [PROB * PROB10,0.2]);
                     </div>
                 </div>
                 <p>
                     Notice how we can completely ignore the rightmost section of the line now, because those were the times that
-                    he made the first free throw, and we only care about if he misses the first <b>and</b> the second. 
+                    he made the first free throw, and we only care about if he misses the first <b>and</b> the second.
                     So the chance of missing <b>two</b> free throws in a row is <code><var>SINGLE_PCT</var>\%</code> of the times
                     that he missed the first shot, which happens <code><var>SINGLE_PCT</var>\%</code> of the time in general.
                 </p>
                 <p>
                     This is <code><var>SINGLE_PCT</var>\% \cdot <var>SINGLE_PCT</var>\%</code>, or
-                    <code><var>PROB</var> \cdot <var>PROB</var> = <var>localeToFixed(PROB*PROB, 3)</var></code>.
+                    <code><var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB, 2)</var> \approx
+                    <var>localeToFixed(PROB * PROB, 3)</var></code>.
                 </p>
                 <div>
-                    <p>We can repeat this process again to get the probability of missing <b>three</b> free throws in a row. We simply take
-                    <code><var>SINGLE_PCT</var>\%</code> of probability that he misses two in a row, which we know from the previous step is
-                    <code><var>localeToFixed(PROB*PROB, 3)</var> \approx \orange{<var>TWO_PCT</var>\%}</code>.</p>
+                    <p>
+                        We can repeat this process again to get the probability of missing <b>three</b> free throws in a row. We simply take
+                        <code><var>SINGLE_PCT</var>\%</code> of probability that he misses two in a row, which we know from the previous step is
+                        <code><var>localeToFixed(PROB*PROB, 3)</var> \approx \purple{<var>TWO_PCT</var>\%}</code>.
+                    </p>
                     <div class="graphie">
                         init({
                             range: [[-1, 11], [-1, 1]]
@@ -350,17 +362,17 @@
 
                         line([0, 0], [10, 0]);
                         line([10,-0.2], [10,0.2]);
-                        label([PROB*10, -0.53], SINGLE_PCT + "\\%", "center");
-                        line([PROB*10,-0.2], [PROB*10,0.2]);
-                        label([PROB*PROB*10, -0.53], TWO_PCT + "\\%", "center");
+                        label([PROB10, -0.53], SINGLE_PCT + "\\%", "center");
+                        line([PROB10,-0.2], [PROB10,0.2]);
+                        label([PROB * PROB10, -0.53], TWO_PCT + "\\%", "center");
 
-                        style({ stroke: "ORANGE", strokeWidth: 3 });
+                        style({ stroke: "PURPLE", strokeWidth: 3 });
                         line([0,-0.2], [0,0.2]);
-                        line([0,0], [PROB*PROB*10,0]);
-                        line([PROB*PROB*10,-0.2], [PROB*PROB*10,0.2]);
+                        line([0,0], [PROB * PROB10,0]);
+                        line([PROB * PROB10,-0.2], [PROB*PROB10,0.2]);
                     </div>
-                    <p><code><var>SINGLE_PCT</var>\%</code> of <code>\orange{<var>TWO_PCT</var>\%}</code> is 
-                    <code><var>PROB</var> \cdot <var>localeToFixed(PROB*PROB, 3)</var> = <var>localeToFixed(Math.pow(PROB,3), 3)</var></code>, or
+                    <p><code><var>SINGLE_PCT</var>\%</code> of <code>\purple{<var>TWO_PCT</var>\%}</code> is
+                    <code><var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB*PROB, 3)</var> \approx <var>localeToFixed(PROB_CUBED, 3)</var></code>, or
                     about <code>\green{<var>THREE_PCT</var>\%}</code>:</p>
                     <div class="graphie">
                         init({
@@ -369,33 +381,33 @@
 
                         line([0, 0], [10, 0]);
                         line([10,-0.2], [10,0.2]);
-                        label([PROB*10, -0.53], SINGLE_PCT + "\\%", "center");
-                        line([PROB*10,-0.2], [PROB*10,0.2]);
-                        label([PROB*PROB*10, -0.53], TWO_PCT + "\\%", "center");
+                        label([PROB10, -0.53], SINGLE_PCT + "\\%", "center");
+                        line([PROB10,-0.2], [PROB10,0.2]);
+                        label([PROB * PROB10, -0.53], TWO_PCT + "\\%", "center");
+
+                        style({ stroke: "#888", strokeWidth: 3 });
+                        line([PROB_CUBED * 10,0], [PROB * PROB10,0]);
+                        line([PROB * PROB10,-0.2], [PROB * PROB10,0.2]);
 
                         style({ stroke: "GREEN", strokeWidth: 3 });
                         line([0,-0.2], [0,0.2]);
-                        line([0,0], [Math.pow(PROB,3)*10,0]);
-                        line([Math.pow(PROB,3)*10,-0.2], [Math.pow(PROB,3)*10,0.2]);
-
-                        style({ stroke: "PINK", strokeWidth: 3 });
-                        line([Math.pow(PROB,3)*10,0], [PROB*PROB*10,0]);
-                        line([PROB*PROB*10,-0.2], [PROB*PROB*10,0.2]);
+                        line([0,0], [PROB_CUBED * 10,0]);
+                        line([PROB_CUBED * 10,-0.2], [PROB_CUBED * 10,0.2]);
                     </div>
                 </div>
                 <p>
                     There is a pattern here: the chance of missing two free throws in a row was
-                    <code><var>PROB</var> \cdot <var>PROB</var></code>, and the probability of missing 
-                    three in a row was <code><var>PROB</var> \cdot <var>localeToFixed(PROB*PROB, 3)</var> = 
-                    <var>PROB</var> \cdot (<var>PROB</var> \cdot <var>PROB</var>)
-                    = <var>PROB</var>^3</code>.
+                    <code><var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB, 2)</var></code>, and the probability of missing
+                    three in a row was <code><var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB*PROB, 3)</var> =
+                    <var>localeToFixed(PROB, 2)</var> \cdot (<var>localeToFixed(PROB, 2)</var> \cdot <var>localeToFixed(PROB, 2)</var>)
+                    = <var>localeToFixed(PROB, 2)</var>^3</code>.
                 </p>
                 <p>
                     In general, you can continue in this way to find the probability of missing any number of shots.
                 </p>
                 <p>
-                    The probability of missing <var>STREAK</var> free throws in a row is 
-                    <code><var>PROB</var> ^ <var>STREAK</var> = <var>ANS</var></code>.
+                    The probability of missing <var>STREAK</var> free throws in a row is
+                    <code><var>localeToFixed(PROB, 2)</var> ^ <var>STREAK</var> = <var>ANS</var></code>.
                 </p>
             </div>
             </div>
@@ -434,9 +446,9 @@
                 <span data-if="isMale(2)">The ship is two furlongs from the dread pirate <var>person(2)</var> and his merciless band of thieves.</span><span data-else="">The ship is two furlongs from the dread pirate <var>person(2)</var> and her merciless band of thieves.</span>
                 <br><br>
                 <span data-if="isMale(2)">The Captain has probability <code><var>C_HIT_PRETTY</var></code> of hitting the pirate ship.
-                The pirate only has one good eye, so he hits the Captain's ship with probability 
+                The pirate only has one good eye, so he hits the Captain's ship with probability
                 <code><var>P_HIT_PRETTY</var></code>.</span><span data-else="">The Captain has probability <code><var>C_HIT_PRETTY</var></code> of hitting the pirate ship.
-                The pirate only has one good eye, so she hits the Captain's ship with probability 
+                The pirate only has one good eye, so she hits the Captain's ship with probability
                 <code><var>P_HIT_PRETTY</var></code>.</span>
             </p>
 
@@ -459,20 +471,20 @@
                 <p>
                     <span data-if="C"><span data-if="P" data-unwrap="">
                         Since they are independent, in order to get the probability that <var>QUESTION</var>, we just need to multiply together
-                    the probability that the captain hits and the probability that 
+                    the probability that the captain hits and the probability that
                     the pirate hits.
                     </span><span data-else="" data-unwrap="">
                         Since they are independent, in order to get the probability that <var>QUESTION</var>, we just need to multiply together
-                    the probability that the captain hits and the probability that 
+                    the probability that the captain hits and the probability that
                     the pirate misses.
                     </span></span>
                     <span data-else=""><span data-if="P" data-unwrap="">
                         Since they are independent, in order to get the probability that <var>QUESTION</var>, we just need to multiply together
-                    the probability that the captain misses and the probability that 
+                    the probability that the captain misses and the probability that
                     the pirate hits.
                     </span><span data-else="" data-unwrap="">
                         Since they are independent, in order to get the probability that <var>QUESTION</var>, we just need to multiply together
-                    the probability that the captain misses and the probability that 
+                    the probability that the captain misses and the probability that
                     the pirate misses.
                     </span></span>
                 </p>
@@ -480,7 +492,7 @@
                     The probability that the Captain hits is <code><var>C_HIT_PRETTY</var></code>.
                 </p>
                 <p data-else="">
-                    The probability that the Captian misses is <code>1 - </code> (the probability the Captain
+                    The probability that the Captain misses is <code>1 - </code> (the probability the Captain
                     hits), which is <code>1 - <var>C_HIT_PRETTY</var> = <var>C_MISS_PRETTY</var></code>.
                 </p>
                 <p data-if="P">
@@ -491,8 +503,8 @@
                     hits), which is <code>1 - <var>P_HIT_PRETTY</var> = <var>P_MISS_PRETTY</var></code>.
                 </p>
                 <p>
-                    So, the probability that <var>QUESTION</var> is 
-                    <code><var>C ? C_HIT_PRETTY : C_MISS_PRETTY</var> \cdot <var>P ? P_HIT_PRETTY : P_MISS_PRETTY</var> = 
+                    So, the probability that <var>QUESTION</var> is
+                    <code><var>C ? C_HIT_PRETTY : C_MISS_PRETTY</var> \cdot <var>P ? P_HIT_PRETTY : P_MISS_PRETTY</var> =
                     \dfrac{<var>ANS_N/getGCD(ANS_N,ANS_D)</var>}{<var>ANS_D/getGCD(ANS_N,ANS_D)</var>}</code>.
                 </p>
             </div>

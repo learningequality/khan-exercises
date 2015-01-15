@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Points on the coordinate plane</title>
-        <script src="../khan-exercise.js"></script>
+        <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
     </head>
     <body>
         <div class="exercise">
@@ -45,6 +45,7 @@
 
                     <div class="question">
                         <p>Which of those pairs is not graphed below?</p>
+                        <div class="render-answer-area-here"></div>
                         <div class="graphie" id="grid">
                             graphInit({
                                 range: 10,
@@ -62,7 +63,7 @@
                                     stroke: "#6495ED",
                                     fill: "#6495ED"
                                 }, function() {
-                                    circle( point, 0.15 );
+                                    circle( point, 0.2 );
                                 });
 
                             });
@@ -83,11 +84,13 @@
                     </div>
                 </div>
 
-                <div class="graphie" data-update="grid">
-                    var point = POINTS[FORGOTTEN];
-                    label( point, PAIR( point ), "above right");
-                    label( point, "\\text{" + $._("was not graphed") + "}", "right" );
-                    circle( point, 0.3, { stroke: "red" } );
+                <div>
+                    <div class="graphie" data-update="grid">
+                        var point = POINTS[FORGOTTEN];
+                        label( point, PAIR( point ), "above right", { color: RED });
+                        circle( point, 0.3, { stroke: RED } );
+                    </div>
+                    <p><code>(<var>POINTS[FORGOTTEN]</var>)</code> was not graphed.</p>
                 </div>
             </div>
         </div>

@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Parabola intuition 3</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
@@ -95,17 +95,11 @@
                     </div>
 
                     <p><span>Focus: </span><code>(</code><span id="focus-x-label"><code>0</code></span><code>,\quad</code><span id="focus-y-label"><code>1</code></span><code>)</code></p>
-                    <p>Directrix: <code>y = </code><span id="directrix-label"><code>-1</code></span></p>
+                    <p>Directrix: <code>y = {}</code><span id="directrix-label"><code>-1</code></span></p>
                     <p>
                         Equation of the parabola:<br>
-                        <span style="font-size: 12px;">
-                        <code>y - </code><span class="sol short30" data-fallback="0"><var>Y1</var></span><code> = </code><span class="sol short30" data-fallback="1"><var>A</var></span><code>(x - </code><span class="sol short30" data-fallback="0"><var>X1</var></span><code>)^2</code>
-                        </span>
+                        <code>y - {}</code><span class="sol short30" data-fallback="0"><var>Y1</var></span><code>{} = {}</code><span class="sol short30" data-forms="integer, proper, improper, mixed, decimal, coefficient"><var>A</var></span><code>(x - {}</code><span class="sol short30" data-fallback="0"><var>X1</var></span><code>)^2</code>
                     </p>
-
-                    <p class="example">set the focus and directrix by moving them around the graph</p>
-                    <p class="example">for the equation of the parabola, you may enter integers, fractions, or exact decimals for each term</p>
-                    <p class="example">pay attention to the sign of each number you enter to be sure the entire equation is correct</p>
                 </div>
 
                 <div class="hints">
@@ -115,12 +109,14 @@
                     <button onclick="javascript:
                         graph = KhanUtil.currentGraph.graph;
                         graph.vertex.moveTo(graph.X1, graph.Y1 + 1 / (4 * graph.A));
+
                         $({ y: graph.directrix.coordA[1] }).animate({ y: graph.Y1 - 1 / (4 * graph.A) }, {
                             duration: Math.abs(graph.directrix.coordA[1] - (graph.Y1 - 1 / (4 * graph.A))) * 300,
                             step: function(now, fx) {
                                 graph.directrix.coordA = [0, now];
                                 graph.directrix.coordZ = [1, now];
                                 graph.directrix.transform();
+                                graph.directrix.onMove(0, now);
                             }
                         });
                     ">Show me</button>
@@ -143,7 +139,7 @@
                 </p>
                 <p>
                     The leading coefficient <code>a</code> in the equation <code>y - y_1 = a (x - x_1)^2</code> indicates how "wide" and
-                    in what direction the parabola opens. It's always the reciprocal of 2 times the distance from the directrix to the focus.
+                    in what direction the parabola opens. It's always the reciprocal of <code>2</code> times the distance from the directrix to the focus.
                 </p>
                 <p>
                     <code>a = \dfrac{1}{2 \times (<var>PRETTY_FOCUS_Y</var> {-} <var>PRETTY_DIR_Y</var>)} = <var>PRETTY_A</var></code>

@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Graphing parabolas in vertex form</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
 <div class="exercise">
@@ -111,9 +111,9 @@
                 style({
                     stroke: KhanUtil.BLUE
                 }, function() {
-                    graph.parabola = plot( function( x ) {
-                        return coeffs[0] * x * x + coeffs[1] * x + coeffs[2];
-                    }, [ -11, 11 ] );
+                    // Plot the parabola
+                    var a = coeffs[0], b = coeffs[1], c = coeffs[2];
+                    graph.parabola = parabola(a, b, c);
                     graph.parabola.toBack();
                 });
             };
@@ -198,7 +198,7 @@
                 <p>The equation is in vertex form, so we can use the vertex as one of the points.</p>
 
                 <div>
-                    <p>When the equation is written in vertex form like this, the vertex is the point <code class="hint_green">(h, k)</code>:
+                    <p>When the equation is written in vertex form like this, the vertex is the point <code class="hint_green">(h, k)</code>:</p>
                     <p><code>\qquad y = a(x-\green{h})^2+\green{k}</code></p>
                 </div>
 

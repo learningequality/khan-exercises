@@ -1,3 +1,7 @@
+define(function(require) {
+
+require("./math.js");
+
 // Example usage:
 // <var>person(1)</var> traveled 5 mi by <var>vehicle(1)</var>. Let
 // <var>his(1)</var> average speed be <var>personVar(1)</var>.
@@ -32,7 +36,7 @@ $.extend(KhanUtil, {
 
     toSentenceTex: function(array, highlight, highlightClass) {
         var wrapped = $.map(array, function(elem) {
-            if (($.isFunction(highlight) && highlight(elem)) || (highlight !== undefined && elem === highlight)) {
+            if ((_.isFunction(highlight) && highlight(elem)) || (highlight !== undefined && elem === highlight)) {
                 return "<code class='" + highlightClass + "'>" + elem + "</code>";
             }
             return "<code>" + elem + "</code>";
@@ -196,22 +200,7 @@ $.extend(KhanUtil, {
                 return usePlural ? plural : value;
             }
         };
-    })(),
-
-    // OBSOLETE.  TODO(csilvers): remove from here and tests after I confirm.
-    // Pluralize with a code tag around the number
-    // - pluralTex(NUMBER, singular):
-    //        - if necessary, magically pluralize <singular>
-    //        - return "<code>NUMBER</code> word"
-    // - pluralTex(NUMBER, singular, plural):
-    //        - return "<code>NUMBER</code> word"
-    pluralTex: function(value, arg1, arg2) {
-        if (typeof arg2 === "string") {
-            return "<code>" + value + "</code> " + KhanUtil.plural(arg1, arg2, value);
-        } else {
-            return "<code>" + value + "</code> " + KhanUtil.plural(arg1, value);
-        }
-    }
+    })()
 });
 
 var Plural = KhanUtil.Plural = function(plural_fn) {
@@ -233,6 +222,64 @@ KhanUtil.Plural.prototype = {
         return this.plural_fn(1);
     }
 };
+
+KhanUtil.numberPlaceNames = [
+    new Plural(function(num) {
+        return $.ngettext("one", "ones", num);
+    }),
+    new Plural(function(num) {
+        return $.ngettext("ten", "tens", num);
+    }),
+    new Plural(function(num) {
+        return $.ngettext("hundred", "hundreds", num);
+    }),
+    new Plural(function(num) {
+        return $.ngettext("thousand", "thousands", num);
+    }),
+    new Plural(function(num) {
+        return $.ngettext("ten thousand", "ten thousands", num);
+    })
+];
+
+KhanUtil.decimalPlaceNames = [
+    new Plural(function(num) {
+        return $.ngettext("one", "ones", num);
+    }),
+    new Plural(function(num) {
+        return $.ngettext("tenth", "tenths", num);
+    }),
+    new Plural(function(num) {
+        return $.ngettext("hundredth", "hundredths", num);
+    }),
+    new Plural(function(num) {
+        return $.ngettext("thousandth", "thousandths", num);
+    }),
+    new Plural(function(num) {
+        return $.ngettext("ten thousandth", "ten thousandths", num);
+    })
+];
+
+KhanUtil.metricUnits = [
+    [$._("m"), new Plural(function(num) {
+        return $.ngettext("meter", "meters", num);
+    })],
+    [$._("cm"), new Plural(function(num) {
+        return $.ngettext("centimeter", "centimeters", num);
+    })]
+];
+
+KhanUtil.imperialUnits = [
+    ["in", new Plural(function(num) {
+        return $.ngettext("inch", "inches", num);
+    })],
+    ["ft", new Plural(function(num) {
+        return $.ngettext("foot", "feet", num);
+    })]
+];
+
+KhanUtil.genericUnit = ["", new Plural(function(num) {
+    return $.ngettext("unit", "units", num);
+})];
 
 $.fn["word-problemsLoad"] = function() {
 
@@ -436,7 +483,7 @@ $.fn["word-problemsLoad"] = function() {
                     return $.ngettext("loaf of bread", "loaves of bread", num);
                 }),
                 new Plural(function(num) {
-                    return $.ngettext("gallon of milk", "gallons of milk", num);
+                    return $.ngettext("liter of milk", "liters of milk", num);
                 }),
                 new Plural(function(num) {
                     return $.ngettext("potato", "potatoes", num);
@@ -544,7 +591,7 @@ $.fn["word-problemsLoad"] = function() {
             return $.ngettext("eggplant", "eggplants", num);
         }),
         new Plural(function(num) {
-            return $.ngettext("kiwi", "kiwis", num);
+            return $.ngettext("kiwi fruit", "kiwi fruit", num);
         }),
         new Plural(function(num) {
             return $.ngettext("lemon", "lemons", num);
@@ -724,7 +771,7 @@ $.fn["word-problemsLoad"] = function() {
             return $.ngettext("pair of glasses", "pairs of glasses", num);
         }),
         new Plural(function(num) {
-            return $.ngettext("pair of boots", "pair of boots", num);
+            return $.ngettext("pair of boots", "pairs of boots", num);
         }),
         new Plural(function(num) {
             return $.ngettext("backpack", "backpacks", num);
@@ -1008,3 +1055,5 @@ $.fn["word-problemsLoad"] = function() {
         }
     });
 };
+
+});

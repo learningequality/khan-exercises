@@ -1,37 +1,46 @@
-var Calculator = (function(parser) {
+window.Calculator = (function(parser) {
+    // I18N: calculator error message
+    var ERROR_TEXT = $._("Error");
     var CalculatorError = function(message) {
         this.message = message;
     };
     CalculatorError.prototype = new Error();
     CalculatorError.prototype.constructor = CalculatorError;
 
-    parser.parseError = function parseError(str, hash) {
-        throw new CalculatorError("err");
+    parser.yy.parseError = function parseError(str, hash) {
+        throw new CalculatorError(ERROR_TEXT);
     };
 
+    var userID = window.KA && window.KA.getUserID();
+    var settings = window.localStorage == null ? {} : $.parseJSON(
+            window.localStorage["calculator_settings:" + userID] || "{}");
+    if (settings.angleMode == null) {
+        settings.angleMode = "DEG";
+    }
+
     return _.bindAll({
-        angleMode: "RAD",
+        settings: settings,
         parser: parser,
         parse: _.bind(parser.parse, parser),
 
         evaluate: function(tree, ans) {
             var toRad = function(ang) {
-                if (Calculator.angleMode === "DEG") {
+                if (settings.angleMode === "DEG") {
                     return ang * Math.PI / 180;
                 }
                 return ang;
             };
             var fromRad = function(ang) {
-                if (Calculator.angleMode === "DEG") {
+                if (settings.angleMode === "DEG") {
                     return ang / Math.PI * 180;
                 }
                 return ang;
             };
             if (tree === "ans") {
-                if (ans != null) {
+                if (ans !== undefined) {
                     return ans;
                 } else {
-                    throw new CalculatorError("Invalid variable ans");
+                    throw new CalculatorError($._("Invalid variable ans"));
                 }
             } else if (tree === "pi") {
                 return Math.PI;
@@ -42,7 +51,7 @@ var Calculator = (function(parser) {
             } else if (_.isArray(tree)) {
                 var fns = {
                     "+": function(a, b) { return a + b; },
-                    "-": function(a, b) { return b == null ? -a : a - b; },
+                    "-": function(a, b) { return b === undefined ? -a : a - b; },
                     "*": function(a, b) { return a * b; },
                     "/": function(a, b) { return a / b; },
                     "^": function(a, b) { return Math.pow(a, b); },
@@ -53,35 +62,42 @@ var Calculator = (function(parser) {
                     tan: function(a) {
                         var ans = Math.tan(toRad(a));
                         if (isNaN(ans) || Math.abs(ans) > Math.pow(2, 53)) {
-                            throw new CalculatorError("undefined");
+                            throw new CalculatorError($._("undefined"));
                         }
                         return ans;
                     },
                     asin: function(a) {
                         var ans = fromRad(Math.asin(a));
                         if (isNaN(ans)) {
-                            throw new CalculatorError("undefined");
+                            throw new CalculatorError($._("undefined"));
                         }
                         return ans;
                     },
                     acos: function(a) {
                         var ans = fromRad(Math.acos(a));
                         if (isNaN(ans)) {
-                            throw new CalculatorError("undefined");
+                            throw new CalculatorError($._("undefined"));
                         }
                         return ans;
                     },
                     atan: function(a) {
                         var ans = fromRad(Math.atan(a));
                         if (isNaN(ans)) {
-                            throw new CalculatorError("undefined");
+                            throw new CalculatorError($._("undefined"));
                         }
                         return ans;
                     },
                     ln: function(a) {
                         var ans = Math.log(a);
                         if (isNaN(ans) || !isFinite(ans)) {
-                            throw new CalculatorError("undefined");
+                            throw new CalculatorError($._("undefined"));
+                        }
+                        return ans;
+                    },
+                    log: function(a) {
+                        var ans = Math.log(a) / Math.LN10;
+                        if (isNaN(ans) || !isFinite(ans)) {
+                            throw new CalculatorError($._("undefined"));
                         }
                         return ans;
                     }
@@ -93,11 +109,12 @@ var Calculator = (function(parser) {
                         this, _.map(tree.slice(1), function(t) {
                             return self.evaluate(t, ans); }));
                 } else {
-                    throw new CalculatorError("err");
+                    throw new CalculatorError(ERROR_TEXT);
                 }
             } else {
                 throw new CalculatorError(
-                    "Invalid type " + Object.prototype.toString.call(tree));
+                    $._("Invalid type %(type)s",
+                        {type: Object.prototype.toString.call(tree)}));
             }
         },
 

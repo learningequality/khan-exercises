@@ -2,8 +2,8 @@
 <html data-require="math math-format word-problems khanscript">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Linear equation word problems</title>
-    <script src="../khan-exercise.js"></script>
+    <title>Linear equation and inequality word problems</title>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
 <div class="exercise">
@@ -75,7 +75,6 @@
                         guess[2] === null ? $("#secondtext").text("") : $("#secondtext").text(guess[2]);
                     }
                 </div>
-                <div class="example">an integer, like <code>6</code></div>
             </div>
 
             <div class="hints">
@@ -157,13 +156,13 @@
                 she goes to bed.
             </p>
             <p class="question" data-if="isMale(1)">
-                What is the minimum number of complete levels that
-                <var>person(1)</var> needs to complete to reach
-                his goal?
+                Assuming <var>person(1)</var> can only get points by completing levels,
+                what is the minimum number of levels that he needs to complete
+                to reach his goal?
             </p><p class="question" data-else="">
-                What is the minimum number of complete levels that
-                <var>person(1)</var> needs to complete to reach
-                her goal?
+                Assuming <var>person(1)</var> can only get points by completing levels,
+                what is the minimum number of levels that she needs to complete
+                to reach her goal?
             </p>
 
             <div class="solution" data-type="custom">
@@ -199,7 +198,6 @@
                         guess[2] === null ? $("#secondtext").text("") : $("#secondtext").text(guess[2]);
                     }
                 </div>
-                <div class="example">an integer, like <code>6</code></div>
             </div>
 
             <div class="hints">
@@ -282,7 +280,7 @@
                 already mastered <code><var>Q</var></code> songs.
             </p>
             <p class="question">
-                If <var>person(1)</var> can typically master
+                If <var>person(1)</var> can master
                 <code><var>P</var></code> songs per month, what is the minimum
                 number of months it will take <var>him(1)</var> to move to the
                 maestro level?
@@ -321,7 +319,6 @@
                         guess[2] === null ? $("#secondtext").text("") : $("#secondtext").text(guess[2]);
                     }
                 </div>
-                <div class="example">an integer, like <code>6</code></div>
             </div>
 
             <div class="hints">

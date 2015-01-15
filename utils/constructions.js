@@ -1,3 +1,7 @@
+define(function(require) {
+
+var kmatrix = require("./kmatrix.js");
+
 $.extend(KhanUtil, {
     drawHintLine: function(pt1, pt2, ticks) {
         var graphie = KhanUtil.currentGraph;
@@ -6,13 +10,13 @@ $.extend(KhanUtil, {
         var midpoint = [(pt1[0] + pt2[0]) / 2, (pt1[1] + pt2[1]) / 2];
         var angle = Math.atan2(pt2[1] - pt1[1], pt2[0] - pt1[0]);
         var transform = function(point) {
-            var matrix = KhanUtil.makeMatrix([
+            var matrix = kmatrix.makeMatrix([
                 [Math.cos(angle), -Math.sin(angle), midpoint[0]],
                 [Math.sin(angle), Math.cos(angle), midpoint[1]],
                 [0, 0, 1]
             ]);
-            var vector = KhanUtil.makeMatrix([[point[0]], [point[1]], [1]]);
-            var prod = KhanUtil.matrixMult(matrix, vector);
+            var vector = kmatrix.makeMatrix([[point[0]], [point[1]], [1]]);
+            var prod = kmatrix.matrixMult(matrix, vector);
             return [prod[0], prod[1]];
         };
 
@@ -26,7 +30,7 @@ $.extend(KhanUtil, {
             }));
         graphie.style({
             stroke: KhanUtil.BLUE,
-            strokeWidth: 1,
+            strokeWidth: 1
         }, function() {
             if (ticks === 1) {
                 hintLine.push(graphie.line(
@@ -125,7 +129,7 @@ $.extend(KhanUtil, {
 
             var t = construction.tool;
 
-            $(t.center.mouseTarget[0]).bind(
+            $(t.center.mouseTarget.getMouseTarget()).bind(
                 "vmouseover vmouseout", function(event) {
                     if (t.center.highlight) {
                         t.circ.animate({
@@ -146,8 +150,6 @@ $.extend(KhanUtil, {
             // add new points that all other points should snap to
             construction.snapPoints.push(t.center);
 
-
-
             t.center.onMove = function(x, y) {
                 t.circ.toFront();
                 t.perim.toFront();
@@ -155,11 +157,11 @@ $.extend(KhanUtil, {
                 t.center.mouseTarget.toFront();
                 t.circ.attr({
                     cx: graphie.scalePoint(x)[0],
-                    cy: graphie.scalePoint(y)[1],
+                    cy: graphie.scalePoint(y)[1]
                 });
                 t.perim.attr({
                     cx: graphie.scalePoint(x)[0],
-                    cy: graphie.scalePoint(y)[1],
+                    cy: graphie.scalePoint(y)[1]
                 });
             };
 
@@ -212,9 +214,10 @@ $.extend(KhanUtil, {
                 }
             };
 
-            t.center.mouseTarget.dblclick(function() {
-                construction.removeTool(t, true);
-            });
+            // XXX(joel/emily)
+            // t.center.mouseTarget.dblclick(function() {
+            //     construction.removeTool(t, true);
+            // });
 
             $(t.perim[0]).css("cursor", "move");
             $(t.perim[0]).bind(
@@ -268,7 +271,7 @@ $.extend(KhanUtil, {
                                 data.radius = KhanUtil.eDist(data.center.coord,
                                     graphie.unscalePoint([mouseX, mouseY]));
                                 data.perim.attr({
-                                    r: graphie.scaleVector(data.radius)[0],
+                                    r: graphie.scaleVector(data.radius)[0]
                                 });
                                 data.circ.attr({
                                     rx: graphie.scaleVector(data.radius)[0],
@@ -287,11 +290,115 @@ $.extend(KhanUtil, {
             construction.updateIntersections();
         };
 
+
+        construction.mark = function() {
+            var x = -1;
+            var y = Math.random() * 2;
+
+            construction.tool = {
+                interType: "line",
+                center: graphie.addMovablePoint({
+                        graph: graphie,
+                        coordX: x,
+                        coordY: y,
+                        normalStyle: {
+                            stroke: KhanUtil.BLUE,
+                            fill: KhanUtil.BLUE
+                        }
+                    })
+            };
+
+            // this is a bit confusing: "graph: graphie" refers
+            // to the movableLineSegment's graph field, whereas
+            // "construction.tool.etc" refers to the KhanUtil.construction
+            // object being built in this util
+            construction.tool.line1 = graphie.addMovableLineSegment({
+                    graph: graphie,
+                    pointA: [x + 0.2, y + 0.2],
+                    pointZ: [x - 0.2, y - 0.2],
+                    normalStyle: {
+                        stroke: KhanUtil.BLUE,
+                        "stroke-width": 2
+                    },
+                    highlightStyle: {
+                        stroke: KhanUtil.ORANGE,
+                        "stroke-width": 3
+                    },
+                    movePointsWithLine: true
+                });
+
+            construction.tool.line2 = graphie.addMovableLineSegment({
+                    graph: graphie,
+                    pointA: [x + 0.2, y - 0.2],
+                    pointZ: [x - 0.2, y + 0.2],
+                    normalStyle: {
+                        stroke: KhanUtil.BLUE,
+                        "stroke-width": 2
+                    },
+                    highlightStyle: {
+                        stroke: KhanUtil.ORANGE,
+                        "stroke-width": 3
+                    },
+                    movePointsWithLine: true
+                });
+
+            $(construction.tool.center.mouseTarget.getMouseTarget()).bind(
+                "vmouseover vmouseout", construction.tool, function(event) {
+                    if (event.data.center.highlight) {
+                        event.data.line1.visibleLine.animate({
+                            stroke: KhanUtil.ORANGE
+                        }, 50);
+                        event.data.line2.visibleLine.animate({
+                            stroke: KhanUtil.ORANGE
+                        }, 50);
+                    } else {
+                        event.data.line1.visibleLine.animate({
+                            stroke: KhanUtil.BLUE
+                        }, 50);
+                        event.data.line2.visibleShape.animate({
+                            stroke: KhanUtil.BLUE
+                        }, 50);
+                    }
+                });
+
+            // add new tool object to graph's collection
+            construction.tools.push(construction.tool);
+
+            // keep track of all the points/lines that points should snap to
+            construction.snapPoints.push(construction.tool.center);
+
+            var t = construction.tool;
+
+            t.center.onMoveEnd = function(dX, dY) {
+                t.line1.visibleLine.toFront();
+                t.line1.mouseTarget.toFront();
+                t.line2.visibleLine.toFront();
+                t.line2.mouseTarget.toFront();
+                t.center.visibleShape.toFront();
+                t.center.mouseTarget.toFront();
+                //t.first.onMoveEnd(t.first.coord[0], t.first.coord[1]);
+                //t.second.onMoveEnd(t.second.coord[0], t.second.coord[1]);
+            };
+
+            $(t.center.mouseTarget.getMouseTarget()).bind("dblclick", function() {
+                construction.removeTool(t, true);
+            });
+
+            construction.updateIntersections();
+        };
+
         // add a straightedge object
         // the straightedge object has the following fields
         // first, second: movable endpoints
         // edge: movable line segment
-        construction.addStraightedge = function() {
+        // extend determines whether the line extends off
+        // screen (default) or is a line segment
+        // if fixed is true then the line cannot be dragged
+        // by selecting the line (as opposed to the end points)
+        construction.addStraightedge = function(extend, fixed) {
+            extend = extend == null ? true : extend;
+            fixed = fixed == null ? false : fixed;
+
             construction.tool = {
                 interType: "line",
                 first: graphie.addMovablePoint({
@@ -328,10 +435,14 @@ $.extend(KhanUtil, {
                         stroke: KhanUtil.ORANGE,
                         "stroke-width": 3
                     },
-                    extendLine: true
+                    extendLine: extend,
+                    constraints: {
+                        fixed: fixed
+                    },
+                    movePointsWithLine: true
                 });
 
-            $(construction.tool.first.mouseTarget[0]).bind(
+            $(construction.tool.first.mouseTarget.getMouseTarget()).bind(
                 "vmouseover vmouseout", construction.tool, function(event) {
                     if (event.data.first.highlight) {
                         event.data.edge.visibleLine.animate({
@@ -351,7 +462,7 @@ $.extend(KhanUtil, {
                         }, 50);
                     }
                 });
-            $(construction.tool.second.mouseTarget[0]).bind(
+            $(construction.tool.second.mouseTarget.getMouseTarget()).bind(
                 "vmouseover vmouseout", construction.tool, function(event) {
                     if (event.data.second.highlight) {
                         event.data.edge.visibleLine.animate({
@@ -371,7 +482,7 @@ $.extend(KhanUtil, {
                         }, 50);
                     }
                 });
-            $(construction.tool.edge.mouseTarget[0]).bind(
+            $(construction.tool.edge.mouseTarget.getMouseTarget()).bind(
                 "vmouseover vmouseout", construction.tool, function(event) {
                     if (event.data.edge.highlight) {
                         event.data.first.visibleShape.animate({
@@ -408,13 +519,6 @@ $.extend(KhanUtil, {
 
             //t.edge.toBack();
 
-            t.edge.onMove = function(dX, dY) {
-                t.first.setCoord([t.first.coord[0] + dX,
-                    t.first.coord[1] + dY]);
-                t.second.setCoord([t.second.coord[0] + dX,
-                    t.second.coord[1] + dY]);
-            };
-
             t.edge.onMoveEnd = function(dX, dY) {
                 t.edge.visibleLine.toFront();
                 t.edge.mouseTarget.toFront();
@@ -426,9 +530,9 @@ $.extend(KhanUtil, {
                 t.second.onMoveEnd(t.second.coord[0], t.second.coord[1]);
             };
 
-            endpointMoveEnd = function(x, y, end) {
+            var endpointMoveEnd = function(x, y, end) {
                 _.each(construction.snapLines, function(line) {
-                    distIntersect = KhanUtil.lDist(end.coord, line);
+                    var distIntersect = KhanUtil.lDist(end.coord, line);
                     if (distIntersect[0] < 0.25) {
                         end.setCoord(distIntersect[1]);
                         end.updateLineEnds();
@@ -486,15 +590,15 @@ $.extend(KhanUtil, {
                 endpointMoveEnd(x, y, t.second);
             };
 
-            $(t.first.mouseTarget[0]).bind("dblclick", function() {
+            $(t.first.mouseTarget.getMouseTarget()).bind("dblclick", function() {
                 construction.removeTool(t, true);
             });
 
-            $(t.second.mouseTarget[0]).bind("dblclick", function() {
+            $(t.second.mouseTarget.getMouseTarget()).bind("dblclick", function() {
                 construction.removeTool(t, true);
             });
 
-            $(t.edge.mouseTarget[0]).bind("dblclick", function() {
+            $(t.edge.mouseTarget.getMouseTarget()).bind("dblclick", function() {
                 construction.removeTool(t, true);
             });
             construction.updateIntersections();
@@ -503,21 +607,15 @@ $.extend(KhanUtil, {
 
         construction.removeTool = function(tool, updateTools) {
             _.each(_.keys(tool), function(key) {
-                if (key === "center" || key === "perimeter"
-                || key === "first" || key === "second")
-                {
+                if (key === "center" || key === "perimeter" ||
+                        key === "first" || key === "second") {
                     tool[key].visibleShape.remove();
                     tool[key].visible = false;
-                    $(tool[key].mouseTarget[0]).remove();
-                }
-                else if (key === "circ")
-                {
+                    $(tool[key].mouseTarget.getMouseTarget()).remove();
+                } else if (key === "circ") {
                     tool[key].remove();
-                }
-                else if (key === "edge") {
-                    tool[key].visibleLine.remove();
-                    tool[key].visible = false;
-                    $(tool[key].mouseTarget[0]).remove();
+                } else if (key === "edge") {
+                    tool[key].remove();
                 }
             });
 
@@ -529,7 +627,7 @@ $.extend(KhanUtil, {
 
         // remove ALL the tools
         construction.removeAllTools = function() {
-            staticTools = [];
+            var staticTools = [];
             _.each(construction.tools, function(tool) {
                 if (tool.dummy) {
                     staticTools.push(tool);
@@ -539,9 +637,9 @@ $.extend(KhanUtil, {
             });
 
             construction.tools = staticTools;
-            construction.snapPoints = []
-            construction.interPoints = []
-            construction.snapLines = []
+            construction.snapPoints = [];
+            construction.interPoints = [];
+            construction.snapLines = [];
         };
 
         // detect intersections between existing circles,
@@ -564,12 +662,12 @@ $.extend(KhanUtil, {
                         else if (tool1.interType === "line" &&
                                 tool2.interType === "circle") {
 
-                            m = (tool1.second.coord[1]
-                              - tool1.first.coord[1]) /
-                                (tool1.second.coord[0]
-                              - tool1.first.coord[0]);
-                            yint = tool1.first.coord[1]
-                                 - m * tool1.first.coord[0];
+                            var m = (tool1.second.coord[1] -
+                                    tool1.first.coord[1]) /
+                                    (tool1.second.coord[0] -
+                                    tool1.first.coord[0]);
+                            var yint = tool1.first.coord[1] -
+                                    m * tool1.first.coord[0];
 
 
                             // solve for x-values of intersections
@@ -592,14 +690,15 @@ $.extend(KhanUtil, {
 
 
                             if (!isNaN(x1)) {
-                                y1 = m * x1 + yint;
+                                var y1 = m * x1 + yint;
                                 construction.interPoints.push([x1, y1]);
                             }
                             if (!isNaN(x2)) {
-                                y2 = m * x2 + yint;
+                                var y2 = m * x2 + yint;
                                 construction.interPoints.push([x2, y2]);
                             }
                         }
+						// two circles
                         else if (tool1.center != null && tool2.center != null) {
                             var a = tool1.center.coord[0];
                             var b = tool1.center.coord[1];
@@ -611,8 +710,8 @@ $.extend(KhanUtil, {
                             var e = c - a;
                             var f = d - b;
                             var p = Math.sqrt(Math.pow(e, 2) + Math.pow(f, 2));
-                            var k = (Math.pow(p, 2) + Math.pow(r, 2)
-                               - Math.pow(s, 2)) / (2 * p);
+                            var k = (Math.pow(p, 2) + Math.pow(r, 2) -
+                                    Math.pow(s, 2)) / (2 * p);
 
                             var x1 = a + e * k / p + (f / p) *
                                 Math.sqrt(Math.pow(r, 2) - Math.pow(k, 2));
@@ -671,6 +770,25 @@ $.extend(KhanUtil, {
         KhanUtil.construction.updateIntersections();
     },
 
+    // add non-interactive circle
+    addDummyCircle: function(center, radius) {
+        var construction = KhanUtil.construction;
+        var dummy = {coord: center};
+
+        KhanUtil.currentGraph.circle(center, {
+            r: radius,
+            fill: "none",
+            stroke: "black",
+            "stroke-width": 2
+        });
+
+        if (construction.snapPoints == null) {
+            construction.snapPoints = [dummy];
+        } else {
+            construction.snapPoints.push(dummy);
+        }
+        KhanUtil.construction.updateIntersections();
+    },
 
     // add non-interactive point (can't just use circle or snapping
     // won't work)
@@ -679,7 +797,7 @@ $.extend(KhanUtil, {
         KhanUtil.currentGraph.circle(coordinates,
                                 {r: 0.08, fill: "black", stroke: "none"});
 
-        var graph = KhanUtil.construction;
+        var construction = KhanUtil.construction;
         if (construction.snapPoints == null) {
             construction.snapPoints = [dummy];
         } else {
@@ -768,8 +886,8 @@ $.extend(KhanUtil, {
     // shorthand for euclidean distance
     // maybe I value brevity too much?
     eDist: function(coords1, coords2) {
-        return Math.sqrt(Math.pow(coords1[0] - coords2[0], 2)
-                       + Math.pow(coords1[1] - coords2[1], 2));
+        return Math.sqrt(Math.pow(coords1[0] - coords2[0], 2) +
+                Math.pow(coords1[1] - coords2[1], 2));
     },
 
     // distance from a point to a line, measured
@@ -778,15 +896,179 @@ $.extend(KhanUtil, {
         var slope = (line.coordZ[1] - line.coordA[1]) /
                 (line.coordZ[0] - line.coordA[0]);
         var perpSlope = slope === 0 ? "vert" : -1 / slope;
+        var coord2;
         if (perpSlope === "vert") {
-            var coord2 = [coord[0], coord[1] + 1];
+            coord2 = [coord[0], coord[1] + 1];
         } else {
-            var coord2 = [coord[0] + 1, coord[1] + perpSlope];
+            coord2 = [coord[0] + 1, coord[1] + perpSlope];
         }
 
         var intersect = findIntersection([coord, coord2],
                                      [line.coordA, line.coordZ]);
 
         return [KhanUtil.eDist(intersect, coord), intersect];
+    },
+
+    // Find whether two points are a given distance apart
+    // given a certain precision
+    distEqual: function(p1, p2, distance, precision) {
+        precision = precision || 0.5;
+        return Math.abs(KhanUtil.eDist(p1, p2) - distance) < precision;
+
+    },
+
+    // Find whether a line has a given angle
+    // to a certain precision (in degrees)
+    angleEqual: function(line, angle, precision) {
+        var ang = Math.atan2(line.second.coord[1] - line.first.coord[1],
+                             line.second.coord[0] - line.first.coord[0]);
+
+        ang *= 180 / Math.PI;
+        if (ang < 0) {
+            ang += 180;
+        }
+        return Math.abs(angle - ang) < precision;
+    },
+
+    // Given an array of construction tools, return an array
+    // with either coordinates of a line and the center and
+    // radius of a circle.
+    // Submitted as the guess for a construction problem
+    getToolProperties: function (construction) {
+        return _.map(_.filter(construction.tools, function(tool) {
+            return tool.dummy !== true;
+        }), function(tool) {
+            if (tool.first != null) {
+                return {
+                    first: {
+                        coord: [
+                            tool.first.coord[0],
+                            tool.first.coord[1]
+                        ]
+                    },
+                    second: {
+                        coord: [
+                            tool.second.coord[0],
+                            tool.second.coord[1]
+                        ]
+                    }
+                };
+            } else if (tool.center != null) {
+                return {
+                    center: {
+                        coord: [
+                            tool.center.coord[0],
+                            tool.center.coord[1]
+                        ]
+                    },
+                    radius: tool.radius
+                };
+            }
+        });
+    },
+
+    findCompass: function (guess, properties) {
+        var testFunctions = [];
+
+        if (properties.radius != null) {
+            testFunctions.push(function (tool) {
+                return Math.abs(tool.radius - properties.radius) < 0.5;
+            });
+        }
+
+        if (properties.cx != null) {
+            testFunctions.push(function (tool) {
+                return Math.abs(tool.center.coord[0] - properties.cx) < 0.5;
+            });
+        }
+
+        if (properties.cy != null) {
+            testFunctions.push(function (tool) {
+                return Math.abs(tool.center.coord[1] - properties.cy) < 0.5;
+            });
+        }
+
+        if (properties.center != null) {
+            testFunctions.push(function (tool) {
+                return Math.abs(tool.center.coord[0] - properties.center[0]) < 0.5 &&
+                    Math.abs(tool.center.coord[1] - properties.center[1]) < 0.5;
+            });
+        }
+
+        return _.filter(guess, function(tool) {
+            if (tool.center != null) {
+                for (var i = 0; i < testFunctions.length; i++) {
+                    if (!testFunctions[i](tool)) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+        });
+    },
+
+    // Given a set of tools (guess), a circle and a number of sides
+    // return the lines that form an inscribed shape with n sides
+    findInscribedPolygon: function (guess, center, radius, n) {
+        var interiorAngle = 2 * Math.PI / n;
+        var sideLength = 2 * radius * Math.sin(interiorAngle / 2);
+
+        // Get array of line of the correct length and with end points on the circle
+        var lines = _.filter(guess, function(tool) {
+            return tool.first != null &&
+                KhanUtil.distEqual(tool.first.coord, tool.second.coord, sideLength, 0.3) &&
+                KhanUtil.distEqual(tool.first.coord, center, radius, 0.3) &&
+                KhanUtil.distEqual(tool.second.coord, center, radius, 0.3);
+        });
+
+        if (lines.length < n) {
+            return false;
+        }
+
+        // Find one angle so we can find the offset
+        var offsetAngle = 180 + Math.atan2(lines[0].first.coord[1], lines[0].first.coord[0]) * 180 / Math.PI;
+
+        // Find angles to line points
+        var angles = [];
+        _.map(lines, function(tool) {
+            var angle1 = Math.atan2(tool.first.coord[1], tool.first.coord[0]) * 180 / Math.PI;
+            var angle2 = Math.atan2(tool.second.coord[1], tool.second.coord[0]) * 180 / Math.PI;
+            angles.push((angle1 - offsetAngle + 540 + 180 / n) % 360);
+            angles.push((angle2 - offsetAngle + 540 + 180 / n) % 360);
+        });
+
+        // Get an object of the angles we expect vertices to be at
+        // Plus half the base angle so it's easier to compare differences from angles
+        // e.g. [0 + 45, 90 + 45, 180 + 45, 270 + 45] for a square
+        // Mean we can count them - there should be two each
+        var targetAngles = {};
+        for (var i = 0; i < n; i++) {
+            targetAngles[(i + 0.5) * 360 / n] = 0;
+        }
+
+        // Go through all angles and see if they are with +/-4 degrees of the target angles
+        var threshold = 4;
+        _.map(angles, function(angle) {
+            for (var i = 0; i < n; i++) {
+                var targetAngle = (i + 0.5) * 360 / n;
+                if (Math.abs(angle - targetAngle) < threshold) {
+                    targetAngles[targetAngle]++;
+                    break;
+                }
+            }
+        });
+
+        //console.log(targetAngles);
+
+        // Check that each angles occurs twice
+        for (var angle in targetAngles) {
+            if (targetAngles[angle] !== 2) {
+                return false;
+            }
+        }
+
+        return lines;
     }
+});
+
 });

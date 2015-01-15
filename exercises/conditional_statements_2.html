@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Conditional statements</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
     <script>
         var addColor = function(color, element) {
             if (color === 1) {
@@ -15,7 +15,7 @@
 
         var makeDisplay = function(str) {
             var color = 0;
-            if ($.isArray(str)) {
+            if (_.isArray(str)) {
                 color = str[1];
                 str = str[0];
             }
@@ -39,7 +39,7 @@
         }
 
         var makeStatement = function(str) {
-            if ($.isArray(str)) {
+            if (_.isArray(str)) {
                 var color = str[1];
                 str = str[0];
 
@@ -73,11 +73,6 @@
             vertical-align: middle;
             line-height: 24px;
         }
-
-        .sort-key {
-            display: none;
-        }
-
         .single-line {
             line-height: 50px;
         }

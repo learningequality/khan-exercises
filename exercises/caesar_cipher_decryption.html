@@ -2,8 +2,8 @@
 <html data-require="math graphie word-problems cipher interactive">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <title>Caesar Cipher Decryption</title>
-    <script src="../khan-exercise.js"></script>
+    <title>Caesar cipher decryption</title>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
     <div class="exercise">
@@ -31,6 +31,8 @@
                     <p><strong><var>C</var></strong></p>
                     <p>Help <var>person(2)</var> crack the code, by typing the decrypted message in the answer box using all lowercase letters.</p>
                 </div>
+
+                <div class="render-answer-area-here"></div>
 
                 <div>
                     <p>You can use the below slider to help you decode the message.<br>
@@ -96,7 +98,7 @@
                 we get the letter <strong><var>M[0]</var></strong>.
             </p>
             <p>
-                If we take the second letter <strong><var>C[1]</var></strong> and shift it left by <strong><var>SHIFT</var></strong>,
+                If we take the second letter <strong><var>C[1]</var></strong> and shift it left by <code><var>SHIFT</var></code>,
                 we get the letter <strong><var>M[1]</var></strong>.
             </p>
             <p>

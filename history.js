@@ -161,7 +161,7 @@ function renderReadOnlyProblem(event, args) {
                                   (guess.value != null ? guess.value : guess) +
                                   "</p>").runModules()
                             );
-                            if (validator(guess)) {
+                            if (validator(guess).correct) {
                                 thissolutionarea
                                     .removeClass("incorrect-activity")
                                     .addClass("correct-activity");
@@ -170,7 +170,7 @@ function renderReadOnlyProblem(event, args) {
                                 thissolutionarea.attr("title", $._("Incorrect Answer"));
                             }
                         } else if (answerType === "custom") {
-                            if (validator(guess)) {
+                            if (validator(guess).correct) {
                                 thissolutionarea
                                     .removeClass("incorrect-activity")
                                     .addClass("correct-activity");
@@ -192,7 +192,7 @@ function renderReadOnlyProblem(event, args) {
 
                             thisAnswerData.showGuess(guess);
 
-                            if (thisAnswerData.validator(guess) === true) {
+                            if (thisAnswerData.validator(guess).correct) {
                                 // If the user didn't get the problem right on the first try, all
                                 // answers are labelled incorrect by default
                                 thissolutionarea
@@ -314,7 +314,7 @@ function renderReadOnlyProblem(event, args) {
                 };
 
                 if (framework === "khan-exercises") {
-                    if (thisSlide.data("guess") !== undefined && $.isFunction(answerData.showCustomGuess)) {
+                    if (thisSlide.data("guess") !== undefined && _.isFunction(answerData.showCustomGuess)) {
                         KhanUtil.currentGraph = $(realWorkArea).find(".graphie").data("graphie");
                         answerData.showCustomGuess(thisSlide.data("guess"));
                         MathJax.Hub.Queue(recordState);

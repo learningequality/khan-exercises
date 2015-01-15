@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Translations of polygons</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
 <div class="exercise">
@@ -29,6 +29,8 @@
                 What is the image of the polygon below after the translation
                 <code>T_{(<var>DX</var>, <var>DY</var>)}</code>?
             </p>
+
+            <div class="render-answer-area-here"></div>
 
             <div class="problem">
                 <div class="graphie" id="grid">
@@ -114,7 +116,7 @@
                             line(
                                 TARGET[i],
                                 TARGET[(i + 1) % TARGET.length],
-                                { stroke: ORANGE }
+                                { stroke: BLUE }
                             );
                         }
                     };
@@ -123,7 +125,7 @@
 
             <div class="solution" data-type="custom">
                 <div class="instruction">
-                    Drag the blue polygon to its image under the given translation.
+                    Drag the orange polygon to its image under the given translation.
                 </div>
                 <div class="guess"> KhanUtil.currentGraph.graph.curPoints </div>
                 <div class="validator-function">
@@ -177,12 +179,12 @@
                     <code>(<var>HULL[0][0]</var>,<var>HULL[0][1]</var>)</code>
                     to
                     <code>(<var>TARGET[0][0]</var>,<var>TARGET[0][1]</var>)</code>,
-                    we changed the x-coordinate by <var>DX</var> and the
-                    y-coordinate by <var>DY</var>. To translate the whole
-                    polygon, we need to do the same thing to all of its points.
+                    we changed the <code>x</code>-coordinate by <code><var>DX</var></code>
+                    and the <code>y</code>-coordinate by <code><var>DY</var></code>.
+                    To translate the whole polygon, we need to do the same thing to all of its points.
                 </p>
                 <div>
-                    <p>The orange outline shows where the polygon ends up after
+                    <p>The blue outline shows where the polygon ends up after
                     the translation.</p>
 
                     <div class="graphie" data-update="grid">
@@ -212,6 +214,8 @@
                 What was the translation applied to move the blue solid shape
                 to the orange dashed shape?
             </p>
+
+            <div class="render-answer-area-here"></div>
 
             <div class="problem">
                 <div class="graphie" id="grid">
@@ -247,7 +251,7 @@
             </div>
 
             <div class="solution" data-type="multiple">
-                <code>{\LARGE T } \;(</code>
+                <code>{\LARGE{T}} \;(</code>
                 <span class="sol short30" data-forms="integer" style="width:15px"><var>DX</var></span>
                 <code>,</code>
                 <span class="sol short30" data-forms="integer" style="width:15px"><var>DY</var></span>
@@ -288,8 +292,8 @@
                     <code>(<var>HULL[0][0]</var>,<var>HULL[0][1]</var>)</code>
                     to
                     <code>(<var>TARGET[0][0]</var>,<var>TARGET[0][1]</var>)</code>,
-                    we changed the x-coordinate by <var>DX</var> and the
-                    y-coordinate by <var>DY</var>.
+                    we changed the <code>x</code>-coordinate by <code><var>DX</var></code>
+                    and the <code>y</code>-coordinate by <code><var>DY</var></code>.
                 </p>
                 <div>
                     The translation used was

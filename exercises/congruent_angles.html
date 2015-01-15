@@ -3,14 +3,14 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Congruent angles</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
 </head>
 <body>
 <div class="exercise">
     <div class="problems">
         <div id="parallel-lines">
             <div class="vars">
-                <var id="ANGLE">randRange(40, 140)</var>
+                <var id="ANGLE">90 + randFromArray([1, -1]) * randRange(10, 50)</var>
                 <var id="ANGLES">["AGF", "FGB", "BGE", "EGA",
                                   "EHD", "DHF", "FHC", "CHE"]</var>
                 <var id="GIVEN">randFromArray(ANGLES)</var>
@@ -47,7 +47,7 @@
             <p class="question">
                 Lines <code>p</code> and <code>q</code> are parallel.
                 Which angles must be congruent to the
-                <span class="hint_orange">given angle</span>?
+                <span class="hint_orange">given angle</span>? Select angles by clicking on them.
             </p>
             <div class="problem">
                 <div class="graphie" id="main">
@@ -73,10 +73,8 @@
                     graph.bottom = graph.congruency.addLine({ start: "A", end: "B" });
                     graph.top = graph.congruency.addLine({ start: "C", end: "D" });
 
-                    graph.congruency.intersect(graph.bottom, graph.cross,
-                                               "G", true);
-                    graph.congruency.intersect(graph.top, graph.cross,
-                                               "H", true);
+                    graph.congruency.intersect(graph.bottom, graph.cross, "G", true);
+                    graph.congruency.intersect(graph.top, graph.cross, "H", true);
 
                     graph.congruency.angles[GIVEN].stick();
                     graph.congruency.angles[GIVEN].setState(1);
@@ -96,16 +94,13 @@
                 </div>
             </div>
             <div class="solution" data-type="custom">
-                <div class="instruction">
-                    Click on the congruent angles, and then click "check answer" when done.
-                </div>
+                <div class="instruction"></div>
                 <div class="guess">
                     graph.congruency.getGuess()
                 </div>
                 <div class="validator-function">
                     if (!_.any(ANGLES, function(ang) {
-                        return (guess[ang] !== 0 &amp;&amp;
-                                ang !== GIVEN);
+                        return (guess[ang] !== 0 &amp;&amp; ang !== GIVEN);
                     })) {
                         return "";
                     }

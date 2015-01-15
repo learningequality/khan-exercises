@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Solving similar triangles 1</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
     <script>
         function triangleAngles( sides ){
             var a = sides[0];
@@ -43,11 +43,10 @@
             return labels;
         }
 
-        function pickLabels (index) {
-            nameArray = ["ABC", "DEF", "GHI", "JKL", "XYZ"];
-            pointsArray = [["A", "B", "C"], ["D", "E", "F"], ["G", "H", "I"], ["J", "K", "L"], ["X", "Y", "Z"]];
-
-            return [nameArray[index[0]], pointsArray[index[0]], nameArray[index[1]], pointsArray[index[1]]];
+        function pickLabels() {
+            var pointsArray = [["A", "B", "C"], ["D", "E", "F"], ["F", "G", "H"], ["J", "K", "L"], ["P", "Q", "R"], ["X", "Y", "Z"]];
+            var index = KhanUtil.randRangeUnique(0, pointsArray.length - 1, 2);
+            return [pointsArray[index[0]], pointsArray[index[1]]];
         }
 
     </script>
@@ -55,13 +54,12 @@
 <body>
     <div class="exercise">
         <div class="vars">
-
-            <var id="LETTERS">"abcdefghijklmnpqrstuvwxyz"</var>
-            <var id="LETTER">randRange( 0, LETTERS.length - 1 )</var>
-            <var id="X">LETTERS[ LETTER ]</var>
-
-            <var id="POINT_LABELS">randRangeUnique(0, 4, 2)</var>
-            <var id="A_NAME, A_POINTS, B_NAME, B_POINTS">pickLabels(POINT_LABELS)</var>
+            <div data-ensure="A_POINTS.indexOf(X.toUpperCase()) === -1 && B_POINTS.indexOf(X.toUpperCase()) === -1">
+                <var id="X">randVar()</var>
+                <var id="A_POINTS, B_POINTS">pickLabels()</var>
+            </div>
+            <var id="A_NAME">A_POINTS.join("")</var>
+            <var id="B_NAME">B_POINTS.join("")</var>
 
             <div data-ensure="SCALE_A !== SCALE_B">
                 <var id="SCALE_A">randRange(1, 5)/2</var>
@@ -88,7 +86,7 @@
                     var trA = new Triangle( [ 0, -2 ],  A_ANGLES, 5*SCALE_A, {} );
                     trA.labels = {"sides": [A_SIDES[2], A_SIDES[0], A_SIDES[1]], "points" : A_POINTS };
                     trA.rotate( randRange( 0, 360 ) );
-                    trA.color = "blue";
+                    trA.color = BLUE;
                     // trA.boxOut( [ [ [ -1, -10  ], [ -1, 20 ] ] ], [ 0.5, 0 ] );
                     // trA.boxOut( TR.sides, [ 0, -1 ] );
                     return trA;
@@ -99,7 +97,7 @@
                     var trB = new Triangle( [ 8, -6 ],  B_ANGLES, 5*SCALE_B, {} );
                     trB.labels = {"sides": [B_LABELS[2], B_LABELS[0], B_LABELS[1]], "points" : B_POINTS };
                     trB.rotate( randRange( 0, 360 ) );
-                    trB.color = "red";
+                    trB.color = RED;
                     // trB.boxOut( [ [ [ 13, -10  ], [ 13, 20 ] ] ], [ -0.5, 0 ] );
                     // trB.boxOut( TR.sides, [ 0, -1 ] );
                     trB.boxOut( TR_A.sides, [ 0, -1 ] );
@@ -112,9 +110,10 @@
         <div id="similar">
             <div class="problem">
                 <p>Triangle <code><var>A_NAME</var></code> is similar to triangle <code><var>B_NAME</var></code>.</p>
-                <p>Solve for <code><var>X</var></code>.</p>
             </div>
-        <div class="question">
+            <p class="question">Solve for <code><var>X</var></code>.</p>
+            <div class="render-answer-area-here"></div>
+            <div class="question">
                 <div class="graphie" id="triangles">
                     TR_A.rotate( randRange( 0, 360 ) );
                     TR_B.rotate( randRange( 0, 360 ) );
@@ -134,13 +133,13 @@
                     })
 
                     style({
-                        stroke: "blue",
+                        stroke: BLUE,
                     });
                     TR_A.draw();
                     TR_A.drawLabels();
 
                     style({
-                        stroke: "red",
+                        stroke: RED,
                     });
                     TR_B.draw();
                     TR_B.drawLabels();
@@ -150,7 +149,7 @@
             <div class="solution" data-type="set">
                 <div class="set-sol"><var>SOLUTION</var></div>
                 <div class="input-format">
-                    <p><code><var>X</var> = \quad</code><span class="entry" data-forms="integer, decimal"></span></p>
+                    <p><code><var>X</var> =</code> <span class="entry" data-forms="integer, decimal"></span></p>
                 </div>
             </div>
 
@@ -158,21 +157,21 @@
                 <p>Similar triangles have proportional sides.</p>
                 <p>Therefore, we can set up equivalent proportions and solve for <code><var>X</var></code>.</p>
                 <div>
-                    <p><code>\dfrac{\color{red}{<var>B_LABELS[SOLUTION_INDEX]</var>}}{\color{blue}{<var>A_SIDES[SOLUTION_INDEX]</var>}} = \dfrac{\color{red}{<var>B_LABELS[PROP_INDEX]</var>}}{\color{blue}{<var>A_SIDES[PROP_INDEX]</var>}}</code></p>
-                    <p data-if="A_SIDES[PROP_INDEX] !== A_SIDES[ALTERNATE_INDEX]">Note: As each corresponding <code>\dfrac{\color{red}{side}}{\color{blue}{side}}</code> proportion is equivalent, you could use the other sides (i.e.,  <code>\dfrac{\color{red}{<var>B_LABELS[SOLUTION_INDEX]</var>}}{\color{blue}{<var>A_SIDES[SOLUTION_INDEX]</var>}} = \dfrac{\color{red}{<var>B_LABELS[ALTERNATE_INDEX]</var>}}{\color{blue}{<var>A_SIDES[ALTERNATE_INDEX]</var>}}</code>)</p>
+                    <p><code>\dfrac{\red{<var>B_LABELS[SOLUTION_INDEX]</var>}}{\blue{<var>A_SIDES[SOLUTION_INDEX]</var>}} = \dfrac{\red{<var>B_LABELS[PROP_INDEX]</var>}}{\blue{<var>A_SIDES[PROP_INDEX]</var>}}</code></p>
+                    <p data-if="A_SIDES[PROP_INDEX] !== A_SIDES[ALTERNATE_INDEX]">Note: As each corresponding <code>\dfrac{\red{side}}{\blue{side}}</code> proportion is equivalent, you could use the other sides (i.e.,  <code>\dfrac{\red{<var>B_LABELS[SOLUTION_INDEX]</var>}}{\blue{<var>A_SIDES[SOLUTION_INDEX]</var>}} = \dfrac{\red{<var>B_LABELS[ALTERNATE_INDEX]</var>}}{\blue{<var>A_SIDES[ALTERNATE_INDEX]</var>}}</code>)</p>
                 </div>
 
                 <div>
                     <p>Reduce the proportion on the right hand side.</p>
-                    <p><code>\dfrac{\color{red}{<var>B_LABELS[SOLUTION_INDEX]</var>}}{\color{blue}{<var>A_SIDES[SOLUTION_INDEX]</var>}} = \cancel{\dfrac{\color{red}{<var>B_LABELS[PROP_INDEX]</var>}}{\color{blue}{<var>A_SIDES[PROP_INDEX]</var>}}}{\color{green}{<var>fractionReduce(B_LABELS[PROP_INDEX], A_SIDES[PROP_INDEX])</var>}}</code></p>
+                    <p><code>\dfrac{\red{<var>B_LABELS[SOLUTION_INDEX]</var>}}{\blue{<var>A_SIDES[SOLUTION_INDEX]</var>}} = \cancel{\dfrac{\red{<var>B_LABELS[PROP_INDEX]</var>}}{\blue{<var>A_SIDES[PROP_INDEX]</var>}}}{\green{<var>fractionReduce(B_LABELS[PROP_INDEX], A_SIDES[PROP_INDEX])</var>}}</code></p>
                 </div>
 
                 <div>
                     <p>Multiply each side by <code><var>A_SIDES[SOLUTION_INDEX]</var></code> and simplify.</p>
-                    <p><code>\cancel{<var>A_SIDES[SOLUTION_INDEX]</var>} \times \dfrac{\color{red}{<var>B_LABELS[SOLUTION_INDEX]</var>}}{\cancel{\color{blue}{<var>A_SIDES[SOLUTION_INDEX]</var>}}} = \color{green}{<var>fractionReduce(B_LABELS[PROP_INDEX], A_SIDES[PROP_INDEX])</var>} \times <var>A_SIDES[SOLUTION_INDEX]</var></code></p>
+                    <p><code>\cancel{<var>A_SIDES[SOLUTION_INDEX]</var>} \times \dfrac{\red{<var>B_LABELS[SOLUTION_INDEX]</var>}}{\cancel{\blue{<var>A_SIDES[SOLUTION_INDEX]</var>}}} = \green{<var>fractionReduce(B_LABELS[PROP_INDEX], A_SIDES[PROP_INDEX])</var>} \times <var>A_SIDES[SOLUTION_INDEX]</var></code></p>
                 </div>
 
-                <p class="final_answer"><code>\color{red}{<var>X</var>}</code> is equal to <code><var>SOLUTION</var></code>.</p>
+                <p class="final_answer"><code>\red{<var>X</var>}</code> is equal to <code><var>SOLUTION</var></code>.</p>
 
             </div>
         </div>

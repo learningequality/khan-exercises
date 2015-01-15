@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Triangle inequality theorem</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
     <script>
         function randomTriangleWithSides(){
             var a = KhanUtil.randRange( 25, 150 );
@@ -40,8 +40,11 @@
         <div class="problems">
             <div id="range">
                 <div class="problem">
-                    What is the range of possible sizes for side x?
+                    What is the range of possible sizes for side <code>x</code>?
                 </div>
+
+                <div class="render-answer-area-here"></div>
+
                 <div class="question">
                     <div class="graphie">
                         init({
@@ -71,7 +74,6 @@
                 </div>
                 <div class="solution" data-type="multiple">
                     <p><span class="sol short40" data-forms="integer, decimal"><var>MIN</var></span> <code>&lt; x &lt;</code> <span class="sol short40" data-forms="integer, decimal"><var>MAX</var></span></p>
-                    <span class="example">two <em>exact</em> decimals, like <code>0.75</code></span>
                 </div>
                 <div class="hints">
                     <p>The triangle inequality theorem states that any side of a triangle is always shorter than the sum of the other two sides.</p>
@@ -90,7 +92,6 @@
                         if (POSSIBLE) {
                             return MAIN[1];
                         } else {
-                            debugger;
                             var m = MAIN[1].slice();
                             m.splice(SIDE, 1, FAKE_SIDE);
                             return m;
@@ -113,6 +114,9 @@
                 <div class="problem">
                     Can this triangle exist?
                 </div>
+
+                <div class="render-answer-area-here"></div>
+
                 <div class="question">
                     <div class="graphie">
                         init({

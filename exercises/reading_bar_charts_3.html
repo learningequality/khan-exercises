@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Reading bar charts 3</title>
-    <script src="../khan-exercise.js"></script>
+    <script data-main="../local-only/main.js" src="../local-only/require.js"></script>
     <style>
         span.rotate  {
             -moz-transform: rotate(-90deg);
@@ -29,13 +29,14 @@
                 <var id="FINAL">$.map( new Array( NUM_STUDENTS ), function() { return randRange( 12, 20 ) * 5; } )</var>
                 <var id="IMPROVEMENT">$.map( new Array( NUM_STUDENTS ), function( e, n ) { return FINAL[ n ] - MIDTERM[ n ]; } )</var>
                 <var id="NUM_IMPROVED">$.map( IMPROVEMENT, function( x ) { return x &gt; 0 ? 1 : null; }).length</var>
-                <var id="IMPROVE_TIE">IMPROVEMENT.slice().sort(function(a,b){return a - b;})[4] === IMPROVEMENT.slice().sort(function(a,b){return a - b;})[3]</var>
+                <var id="IMPROVE_TIE">sortNumbers(IMPROVEMENT)[4] === sortNumbers(IMPROVEMENT)[3]</var>
                 <var id="UNBIASED">false</var>
             </div>
         </div>
         <div class="problem">
             <p>Use the graph to answer the question:</p>
             <p id="qn"></p>
+            <p class="render-answer-area-here"></p>
             <div class="graphie" id="barchart">
                 init({
                     range: [ [ -2, NUM_STUDENTS * 3 + 2 ], [ -3, 12 ] ],

@@ -1,4 +1,4 @@
-(function() {
+define(function(require) {
 
 function findChildOrAdd(elem, className) {
     var $child = $(elem).find("." + className);
@@ -82,7 +82,7 @@ $.extend(KhanUtil, {
             if (Exercises.useKatex) {
                 // Try to process the nodes with KaTeX first
                 try {
-                    katex.process(text, $katexHolder[0]);
+                    katex.render(text, $katexHolder[0]);
                     // If that worked, and we previously formatted with
                     // mathjax, do some mathjax cleanup
                     if ($elem.attr("data-math-type") === "mathjax") {
@@ -154,7 +154,7 @@ $.extend(KhanUtil, {
     },
 
     processAllMath: function(elem, force) {
-        $elem = $(elem);
+        var $elem = $(elem);
         $elem.filter("code").add($elem.find("code")).each(function() {
             var $this = $(this);
             var text = $this.attr("data-math-formula");
@@ -211,5 +211,4 @@ $.fn.texCleanup = function() {
     return this;
 };
 
-
-})();
+});

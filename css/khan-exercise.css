@@ -27,6 +27,11 @@ div.subhint {
 a.show-subhint {
     font-size: 12px;
     font-style: italic;
+    background-color: #FDFDFD;
+}
+
+a.show-definition {
+    background-color: #FDFDFD;
 }
 
 div.definition {
@@ -45,11 +50,11 @@ div.definition {
 
 #workarea { margin-left: 30px; }
 #hintsarea { margin-left: 50px; }
-#answer_area ul { list-style: none; }
-#answer_area li { padding: 7px 0; }
-#answer_area li label { display: block; }
-#answer_area li input[type=radio] { float: left; margin-top: 4px; }
-#answer_area li .value { display: block; min-height: 22px; margin-left: 18px; }
+.solutionarea ul { list-style: none; }
+.solutionarea li { padding: 7px 0; }
+.solutionarea li label { display: block; }
+.solutionarea li input[type=radio] { float: left; margin-top: 4px; }
+.solutionarea li .value { display: block; min-height: 22px; margin-left: 18px; }
 
 #extras li { display: inline; }
 #extras li:before { content: "| "; }
@@ -59,8 +64,8 @@ div.definition {
 #answer_area #check-answer-results .check-answer-message { font-size: 12px; line-height: 20px; margin: 0; }
 #sad, #happy { float: left; margin: 0 6px 4px 0; }
 
-#examples { color: #777; margin-left: 20px; list-style-type: disc; }
-#examples li { margin: 5px 0; }
+.examples { color: #777; margin-left: 20px; list-style-type: disc; }
+.examples li { margin: 5px 0; }
 
 #problemarea { font-size: 14px; width: 70%; min-height: 378px; position: relative; float: left; padding-bottom: 38px; }
 
@@ -77,48 +82,48 @@ table.limit td { border: 1px solid #AAA; }
 table.limit th, table.limit td { padding: 5px; }
 table.limit th:first-child { text-align: right; }
 
-#answer_area input[type=text],
-#answer_area input[type=number] {
+.solutionarea input[type=text],
+.solutionarea input[type=number] {
     width: 80px;
 }
-#answer_area .short20 input[type=text],
-#answer_area .short20 input[type=number] {
+.solutionarea .short20 input[type=text],
+.solutionarea .short20 input[type=number] {
     width: 20px;
 }
-#answer_area .short25 input[type=text],
-#answer_area .short25 input[type=number] {
+.solutionarea .short25 input[type=text],
+.solutionarea .short25 input[type=number] {
     width: 25px;
 }
-#answer_area .short28 input[type=text],
-#answer_area .short28 input[type=number] {
+.solutionarea .short28 input[type=text],
+.solutionarea .short28 input[type=number] {
     width: 28px;
 }
-#answer_area .short30 input[type=text],
-#answer_area .short30 input[type=number] {
+.solutionarea .short30 input[type=text],
+.solutionarea .short30 input[type=number] {
     width: 30px;
 }
-#answer_area .short32 input[type=text],
-#answer_area .short32 input[type=number] {
+.solutionarea .short32 input[type=text],
+.solutionarea .short32 input[type=number] {
     width: 32px;
 }
-#answer_area .short35 input[type=text],
-#answer_area .short35 input[type=number] {
+.solutionarea .short35 input[type=text],
+.solutionarea .short35 input[type=number] {
     width: 35px;
 }
-#answer_area .short40 input[type=text],
-#answer_area .short40 input[type=number] {
+.solutionarea .short40 input[type=text],
+.solutionarea .short40 input[type=number] {
     width: 40px;
 }
-#answer_area .short50 input[type=text],
-#answer_area .short50 input[type=number] {
+.solutionarea .short50 input[type=text],
+.solutionarea .short50 input[type=number] {
     width: 50px;
 }
 #readonly { display: none; }
 
 .radical .surd { font: 150% Arial; padding: 0 0 0 5px; }
 .radical .overline { border-top: 1px solid #000; padding: 6px 1px 0 3px; margin-left: -1px; }
-#answer_area .radical input[type=text],
-#answer_area .radical input[type=number] {
+.solutionarea .radical input[type=text],
+.solutionarea .radical input[type=number] {
     width: 40px;
 }
 
@@ -144,7 +149,7 @@ body.debug .graphie { outline: 1px dashed #fdd; }
 }
 
 #scratchpad-not-available { display: none; }
-#extras .report-issue-link { float: right; font-size: 11px; }
+#extras .report-issue-link { float: right; }
 
 #tester-info.info-box { background: #f2e4bf; }
 #tester-info .box { border: 1px solid black; padding: 2px 4px; margin-left: 5px; }
@@ -156,25 +161,13 @@ body.debug .graphie { outline: 1px dashed #fdd; }
 #answer_area input.simple-button.full-width {
   width: 100%;
 }
-#answer_area #answercontent { position: relative; z-index: 2; }
+#answer_area #answercontent { position: relative; z-index: 2; } /* above-scratchpad */
 #answer_area .hint-box { position: relative; z-index: 1;}
-#answer_area #examples-show {
-  display: none;
-  float: right;
-  margin-top: -2px;
-  background: #F7F7F7;
-  padding: 0 10px;
-  font-size: 80%;
-  border-radius: 50px;
-  border: 1px solid #DDD;
-  color: #777;
-  cursor: default;
-}
-#answer_area #examples-show:hover,
-#answer_area #examples-show.hover {
-  background: #777;
-  color: #fff;
-  text-decoration: none;
+
+#problemarea a:link,
+#problemarea input,
+#problemarea label { /* HACK(aria): for radios */
+    position: relative; z-index: 3; /* interactive-content */
 }
 
 #answer_area .calculator {
@@ -182,30 +175,66 @@ body.debug .graphie { outline: 1px dashed #fdd; }
     margin: 0 auto;
 }
 
+.calculator-angle-mode .selected-anglemode {
+    color: #050505;
+}
+
+.calculator-angle-mode .unselected-anglemode {
+    color: #BBBBBB;
+}
+
 #answer_area .calculator .history {
     font: 14px/1.5 Menlo, Monaco, Courier, monospace;
     margin: 0 0 10px;
     width: 183px;
-    max-height: 150px;
+
+    background-color: white;
+    border-radius: 5px;
+}
+
+#answer_area .calculator .history #calc-output-content {
+    position: absolute;
+    bottom: 0px;
+    width: 100%;
     overflow-y: scroll;
     overflow-x: hidden;
+    max-height: 80px;
+}
+
+#answer_area .calculator .history #calc-output {
+    height: 80px;
+    text-align: left;
+    overflow-y: hidden;
+    overflow-x: hidden;
+    position: relative;
 }
 
 #answer_area .calculator .history .output {
     text-align: right;
+    margin-right: 3px;
 }
 
 #answer_area .calculator .history input {
     box-sizing: border-box;
+    -moz-box-sizing: border-box;
     display: block;
     font: inherit;
     margin: 5px 3px 3px;
     width: 98%;
-    padding-right: 25px;
+    padding-left: 25px;
+    padding-right: 8px;
+    text-align: right;
+    border: none;
+    outline-width: 0;
 }
 
 #answer_area .calculator .history .input {
     position: relative;
+}
+
+#answer_area .calculator .history .input-history {
+    position: relative;
+    margin-left: 3px;
 }
 
 #answer_area .calculator .history .status a {
@@ -215,8 +244,8 @@ body.debug .graphie { outline: 1px dashed #fdd; }
     text-decoration: none;
     line-height: 9px;
     height: 19px;
-    top: 2px;
-    right: 6px;
+    top: 5px;
+    left: 6px;
 }
 
 #answer_area .calculator .keypad .calc-row {
@@ -234,13 +263,29 @@ body.debug .graphie { outline: 1px dashed #fdd; }
     width: 31px;
 }
 
+#answer_area .calculator .keypad .calc-row a:hover {
+    background: #bbb;
+}
+
+#answer_area .calculator .keypad .calc-row a:active {
+    background: #aaa;
+}
+
 #answer_area .calculator .keypad .calc-row a.dark {
     background: #aaa;
 }
 
+#answer_area .calculator .keypad .calc-row a.dark:hover {
+    background: #999;
+}
+
+#answer_area .calculator .keypad .calc-row a.dark:active {
+    background: #888;
+}
+
 #answer_area .calculator .keypad a sup {
     vertical-align: super;
-    font-size: 85%;
+    font-size: 80%;
     line-height: 0;
 }
 
@@ -253,13 +298,18 @@ body.debug .graphie { outline: 1px dashed #fdd; }
     padding: 10px;
     margin: 0 -10px;
     border-bottom: 1px solid #c3c3c3;
-    overflow-x: auto;
+    overflow: visible;
+}
+
+.workarea #solutionarea {
+    border-bottom: 0;
+    padding-bottom: 0;
+    padding-top: 0;
 }
 
 #answer_area .answer-buttons {
   margin: 0 -10px;
   padding: 10px 10px 0;
-  border-top: 1px solid #fff;
   position: relative;
 }
 
@@ -551,7 +601,7 @@ html.exercise-browser {
 	font-size: 16px;
 }
 
-.lite #answercontent #examples-show, .lite #answercontent #examples {
+.lite #answercontent .examples {
 	display: none !important;
 }
 
@@ -735,7 +785,7 @@ html.exercise-browser {
 	-webkit-border-radius: 4px;
 	cursor: pointer;
 	margin-right: 4px;
-	width: 65px;
+	min-width: 65px;
 	height: 65px;
 	text-align: center;
 	font-size: 1.2em;
@@ -774,6 +824,34 @@ html.exercise-browser {
 	filter: alpha(opacity = 80);
 }
 
+.box-whisker-sortable > .sortable {
+    background: #f8f8f8;
+    border: 0;
+    border-bottom: 0;
+    box-shadow: 0 0 0;
+    -moz-box-shadow: 0 0 0;
+    -webkit-box-shadow: 0 0 0;
+    padding-right: 0;
+}
+
+.box-whisker-sortable > .sortable > ul > li {
+    width: 28px;
+    min-width: 28px;
+    height: 28px;
+    margin-right: 2px;
+    font-size: 1em;
+    border: 1px solid #ddd;
+}
+.box-whisker-sortable > .sortable code {
+    line-height: 32px;
+}
+
+#problemarea div#congruent-triangles {
+    outline-color: #999;
+    outline-style: dashed;
+    outline-width: 1px;
+}
+
 /* Video hints */
 
 .video-hint {
@@ -810,20 +888,32 @@ html.exercise-browser {
   color: #CE4444;
 }
 
+/*Worked example hints*/
+.example-hint,
+{
+  margin-bottom: 15px;
+}
 /* Fancy matrix input - goes along with matrix-input.js */
 
-#answer_area .matrix-row {
+.matrix-input {
+    padding: 15px;
+    margin-top: 10px;
+    background-color: #eee;
+    width: 165px;
+}
+
+.solutionarea .matrix-row {
     float: left;  /* contain inner floats */
     clear: both;
 }
 
-#answer_area .matrix-row .sol {
+.solutionarea .matrix-row .sol {
     margin: 0;
     float: left;
 }
 
-#answer_area .matrix-row .sol input[type=text],
-#answer_area .matrix-row .sol input[type=number] {
+.solutionarea .matrix-row .sol input[type=text],
+.solutionarea .matrix-row .sol input[type=number] {
     width: 45px;
     height: 30px;
     border: none;
@@ -852,6 +942,15 @@ html.exercise-browser {
     border-right: 2px solid #888;
 }
 
+.matrix-input:after {
+    content: "";
+    display: block;
+    clear: both;
+    visibility: hidden;
+    overflow: hidden;
+    height: 0;
+}
+
 table.periodic-table td.element {
     border: 1px solid;
     min-width: 37px;
@@ -869,6 +968,13 @@ table.periodic-table td.element div.weight {
     font-size: 10px;
 }
 
+.plugging_in_values > span {
+    width: 80px;
+}
+table.plugging_in_values_hint td {
+    padding-left: 40px;
+}
+
 span.hover-hint {
     color: #005987;
     border-bottom: 1px dashed #005987;
@@ -877,6 +983,25 @@ span.hover-hint:hover {
     color: #678d00;
     border-bottom: 1px dashed #678d00;
     cursor: pointer;
+}
+
+.vis-deriv-hint-graph {
+    display: block;
+    float: left;
+    margin-right: 50px;
+}
+
+#problemarea .quarter-graph {
+    float: left;
+    margin-bottom: 45px;
+    margin-right: 45px;
+}
+
+#problemarea .estimation span {
+    width: 100px;
+}
+#problemarea .estimation span:first-child {
+    width: 50px;
 }
 
 #solutionarea table.rational-exp td {
@@ -893,6 +1018,157 @@ span.hover-hint:hover {
     border-top: 1px solid black;
 }
 
+#solutionarea table.rational-exp td.soln-dom {
+    padding-left: 3px;
+}
+
+#problemarea div.z-score-table > span {
+    width: 32px;
+    font-size: 11px;
+    padding: 5px;
+}
+
+#problemarea div.z-score-table > span:first-child {
+    font-weight: bold;
+    width: 22px;
+    border-right: 2px solid #CCCCCC;
+}
+
+#problemarea div.focus-information {
+    padding-bottom: 12px;
+    height: 70px;
+    clear: both;
+}
+
+#problemarea div.focus-information div {
+    display: block;
+}
+#problemarea div.focus-information-column-left {
+    float: left;
+    width: 30%;
+}
+#problemarea div.focus-information-column-right {
+    float: right;
+    width: 55%;
+}
+
+#problemarea .reading-tables > span {
+    text-align: center;
+    width: 65px;
+}
+#problemarea .reading-tables > span:first-child {
+    text-align: left;
+    width: 100px;
+}
+
+#problemarea .reading > span {
+    width: 32px;
+    font-size: 11px;
+    padding: 5px;
+}
+
+#problemarea .reading.fake_header > span {
+    text-align: center;
+}
+
+#problemarea .reading > span:first-child {
+    font-weight: bold;
+    width: 22px;
+    border-right: 2px solid #CCCCCC;
+}
+
+#problemarea .problem .graph-caption {
+    display: block;
+    margin-top: 10px;
+    margin-bottom: 30px;
+}
+
+#solutionarea .intuition-equation td {
+    text-align: right;
+    padding-left: 5px;
+}
+
+.question li span.sort-key {
+    visibility: hidden;
+    position: absolute;
+}
+
+.problem table.problem-equation td {
+    padding-left: 3px;
+    padding-right: 3px;
+    text-align: center;
+}
+.problem table.problem-equation input {
+    width: 25px;
+    margin-right: 5px;
+    vertical-align: super;
+}
+
+#coin-flip-sequence-charts {
+    height: 324px;
+    position: relative;
+    width: 496px;
+}
+
+#coin-flip-sequence-charts .graphie {
+    height: 324px;
+    width: 496px;
+    position: absolute !important;
+}
+
+#coin-flip-sequence-chart-1 {
+    left: 496px;
+}
+
+#coin-flip-sequence-chart-2 {
+    left: 992px;
+}
+
+#coin-flip-sequence-chart-3 {
+    left: 1488px;
+}
+
+.view-coin-flip-sequence-patterns {
+    margin-top: 12px;
+}
+
+.view-coin-flip-sequence-patterns span {
+    color: #ccc;
+}
+
+.view-coin-flip-sequence-patterns a {
+    margin: 0 5px;
+}
+
+.view-coin-flip-sequence-patterns a.selected {
+    font-weight: bold;
+    color: #444 !important;
+    cursor: default;
+    text-decoration: none !important;
+}
+
+.coin-flip-sequence-heads {
+    background: #a6a6a6;
+    color: #333;
+}
+
+.coin-flip-sequence-heads,
+.coin-flip-sequence-tails {
+    border-right: 1px solid #888;
+    float: left;
+    font-family: Verdana, sans-serif;
+    font-size: 14px;
+    margin-bottom: 5px;
+    padding: 0 2px;
+    text-align: center;
+    width: 16px;
+}
+
+.coin-flip-sequence-tails {
+    background: #595959;
+    color: #ccc;
+}
+
 body.debug span.error {
     font-weight: bold;
     color: #FFF;
@@ -907,69 +1183,81 @@ body.debug span.error {
     color: inherit;
 }
 
-/* Expression/equation input (see "expression" answer type) */
-#answer_area .expression {
-    display: block;
+.solutionarea .info-box .mini-button {
+    margin: 0px 10px 0px 0px;
+    padding: 0px 5px;
+    width: 25px;
+    height: 18px;
 }
 
-#answer_area .expression > input {
+.solutionarea #number-label {
+    clear: both;
+    margin: 0px 0px;
+    padding: 14px 0px 0px 0px;
+}
+
+/* Expression/equation input (see "expression" answer type) */
+.solutionarea .expression {
     box-sizing: border-box;
-    -moz-box-sizing: border-box;
-    -webkit-box-sizing: border-box;
+    display: block;
     max-width: 240px;
     width: 100%;
-    margin-bottom: 5px;
 }
 
-#answer_area .expression > .output {
-    display: block;
+.solutionarea .expression > .output {
+    background: #f2f2f2;
+    display: inline-block;
+    border-radius: 5px;
+    padding-top: 10px;
+    margin: 10px 0;
+    /* HACK(aria) above scratchpad so that users have somewhere to
+     * "click off of" to hide the expression dialog.
+     * Also important because it can get a silly scrollbar and we
+     * want users to be able to scroll even if the scratchpad is
+     * open. We should probably make this wider eventually. */
+    position: relative; z-index: 2;
 }
 
-#answer_area .expression > .output > .tex {
+.solutionarea .expression > .output > .tex {
     display: block;
-    overflow-x: auto;
+    min-height: 42px;
+    overflow-x: scroll;
+    padding: 2px 10px 16px 10px;
 }
 
-#answer_area .expression > .output > .placeholder {
-    display: block;
+.solutionarea .expression > .input {
     position: relative;
-    height: 40px;
-    overflow-y: hidden;
+    z-index: 3; /* interactive-content */
 }
 
-#answer_area .expression > .output > .placeholder  > .error {
-    -webkit-border-radius: 10px;
-    -moz-border-radius: 10px;
-    border-radius: 10px;
-    background: #f7f7f7;
-    border: 1px solid #ddd;
-    box-shadow: 2px 2px 5px rgba(0,0,0,0.5);
-    color: #000;
-    display: none;
-    font-weight: normal;
-    min-height: 22px;
-    width: 168px;
-    position: absolute;
-    top: 0px;
-    left: 40px;
-    margin: auto;
-    font-size: 100%;
-    padding: 0;
-    text-decoration: none;
+.solutionarea .expression > .input > input {
+    border: 1px solid #a4a4a4;
+    border-radius: 5px;
+    direction: ltr;
+    font-size: 14px;
+    margin-bottom: 5px;
+    padding: 6px;
 }
 
-#answer_area .expression > .output > .placeholder > .error > .buddy {
-    background-image: url(images/error-buddy.png);
-    background-size: 100%;
-    height: 36px;
-    width: 40px;
+.solutionarea .expression > .output,
+.solutionarea .expression > .output > .tex,
+.solutionarea .expression > .input > input {
+    box-sizing: border-box;
+    max-width: 240px;
+    width: 100%;
+}
+
+.solutionarea .expression > .input > input.error {
+    padding-right: 25px;
+}
+
+.solutionarea .expression > .input > .error-div {
     position: absolute;
+    right: 6px;
     top: -3px;
-    left: -42px;
 }
 
-#answer_area .expression > .output > .placeholder > .error > .message {
-    font: 12px "Helvetica Neue", Helvetica, Arial, sans-serif;
-    line-height: 1.4em;
-    margin: 0px 4px;
+.solutionarea .expression > .input > .error-div > .error-icon {
+    color: #fcc335;
+    font-size: 20px;
 }

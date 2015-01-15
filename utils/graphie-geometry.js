@@ -1,10 +1,16 @@
-// TODO: shove these into KhanUtil or somewhere reasonable
+define(function(require) {
 
-function rotatePoint(p, deg, c) {
+require("./graphie.js");
+var kline = require("./kline.js");
+var kmatrix = require("./kmatrix.js");
+
+// TODO(eater): shove these into KhanUtil or somewhere reasonable
+
+window.rotatePoint = function(p, deg, c) {
+    c = c || [0, 0];
     var rad = KhanUtil.toRadians(deg),
         cos = Math.cos(rad),
         sin = Math.sin(rad),
-        c = c || [0, 0],
         cx = c[0],
         cy = c[1],
         px = p[0],
@@ -12,12 +18,7 @@ function rotatePoint(p, deg, c) {
         x = cx + (px - cx) * cos - (py - cy) * sin,
         y = cy + (px - cx) * sin + (py - cy) * cos;
     return [KhanUtil.roundTo(9, x), KhanUtil.roundTo(9, y)];
-}
-
-function getSideMidpoint(path) {
-    return [(path[0][0] + path[1][0]) / 2,
-            (path[0][1] + path[1][1]) / 2];
-}
+};
 
 $.extend(KhanUtil, {
     rightAngleBox: function(path1, path2, style) {
@@ -47,9 +48,7 @@ $.extend(KhanUtil, {
     parallel: function(path, num, style) {
         var graph = KhanUtil.currentGraph;
 
-        var spacing = 0.5;
-
-        point = getSideMidpoint(path);
+        var point = kline.midpoint(path);
 
         graph.path([path[0], point], $.extend(style, { arrows: "->" }));
     },
@@ -61,7 +60,7 @@ $.extend(KhanUtil, {
 
         for (var i = 0; i < num; i++) {
             var sPath = _.map(path, graph.scalePoint),
-            sPoint = getSideMidpoint(sPath),
+            sPoint = kline.midpoint(sPath),
             angle = Math.atan((sPath[0][1] - sPath[1][1]) / (sPath[0][0] - sPath[1][0])),
             perpangle = angle + Math.PI / 2;
 
@@ -75,160 +74,16 @@ $.extend(KhanUtil, {
     }
 });
 
-function RegularPolygon(center, numSides, radius, rotation, fillColor) {
-    var graph = KhanUtil.currentGraph;
-    rotation = rotation || 0;
-    rotation = KhanUtil.toRadians(rotation);
-    var lines = [];
-
-    this.draw = function() {
-        var angle = 2 * Math.PI / numSides;
-        var arr = [];
-        for (var i = 0; i < numSides; i++) {
-            arr.push([center[0] + radius * Math.cos(rotation + i * angle), center[1] + radius * Math.sin(rotation + i * angle)]);
-            arr.push([center[0] + radius * Math.cos(rotation + (i + 1) * angle), center[1] + radius * Math.sin(rotation + (i + 1) * angle)]);
-        }
-        return KhanUtil.currentGraph.path(arr);
-    }
-
-    function getSymmetryCoordinates(i) {
-        var angle = rotation + Math.PI * i * 1 / numSides;
-        var extend = 2;
-        var scaleToEnd = extend + 5.4;
-        var p1 = [center[0] - Math.cos(angle) * scaleToEnd, center[1] - Math.sin(angle) * scaleToEnd];
-        var p2 = [scaleToEnd * Math.cos(angle) + center[0], scaleToEnd * Math.sin(angle) + center[1]];
-        return [p1, p2];
-    }
-
-    this.drawLineOfSymmetry = function(i, color) {
-        var coords = getSymmetryCoordinates(i);
-        color = color || KhanUtil.BLUE;
-        return graph.line.apply(graph, $.merge(coords, [{ stroke: color }]));
-    }
-
-    this.drawFakeLineOfSymmetry = function(i, color) {
-        color = color || KhanUtil.BLUE;
-        var coords = getSymmetryCoordinates(i),
-            angle = 360 / numSides / 2,
-            fudge = KhanUtil.randRange(10, angle - 10) * KhanUtil.randFromArray([-1, 1]);
-        return graph.line(rotatePoint(coords[0], fudge), rotatePoint(coords[1], fudge), { stroke: color });
-    }
-
-    this.drawSide = function(style) {
-        return graph.line(this.path.graphiePath[0], this.path.graphiePath[1], style);
-    }
-
-    this.drawSideLabel = function(s, color) {
-        var path = this.path.graphiePath;
-        return graph.label(getSideMidpoint(path), "\\color{"+color+"}{"+s+"}", "right");
-    }
-
-    this.drawRadius = function(style) {
-        var vertex = this.path.graphiePath[0];
-
-        return graph.line(center, vertex, style);
-    }
-
-    this.drawRadiusLabel = function(r, color) {
-        var vertex = this.path.graphiePath[0];
-
-        return graph.label([(vertex[0] - center[0]) / 2, (vertex[1] - center[1]) / 2], "\\color{"+color+"}{"+r+"}", "below");
-    }
-
-    this.drawApothem = function(style) {
-        return graph.line(center, getSideMidpoint(this.path.graphiePath), style);
-    }
-
-    this.drawApothemLabel = function(a, color) {
-        var midpoint = getSideMidpoint(this.path.graphiePath);
-
-        return graph.label([(midpoint[0] - center[0]) / 2, (midpoint[1] - center[1]) / 2], "\\color{"+color+"}{"+a+"}", "above");
-    }
-
-    this.drawRightBox = function(style) {
-
-    }
-
-    this.drawCentralAngle = function(style) {
-        return graph.arc(center, 0.5, 0, 180 / numSides, null, style);
-    }
-
-    this.drawCentralAngleLabel = function(t, color) {
-        return graph.label(center, "\\color{"+color+"}{"+t+"}", "above right");
-    }
-
-    this.drawIncircle = function(style) {
-        return graph.circle(center, KhanUtil.getDistance(center, getSideMidpoint(this.path.graphiePath)), style);
-    }
-
-    this.drawCircumcircle = function(style) {
-        return graph.circle(center, radius, style);
-    }
-
-    this.drawRightTriangle = function(i, fromMidpoint, style) {
-        var vertex = this.path.graphiePath[i],
-        vertex2 = this.path.graphiePath[i + 1],
-        midpoint = lineMidpoint([vertex, vertex2]);
-
-        if (fromMidpoint) {
-            return graph.path([center, midpoint, vertex2, center], style);
-        } else {
-            return graph.path([center, vertex, midpoint, center], style);
-        }
-    }
-
-    // Does not currently work with 2 points on one side
-    this.splitPath = function(line) {
-        var points = linePathIntersection(line, this.path),
-            paths = [],
-            currPath = [];
-        for (var i = 0; i < this.path.graphiePath.length - 1; i = i + 2) {
-            var pt1 = this.path.graphiePath[i];
-            var pt2 = this.path.graphiePath[i + 1];
-            var intersections = findPointsOnLine([pt1, pt2], points);
-
-            currPath.push(pt1);
-
-            if (intersections.length !== 0) {
-                var point = intersections[0];
-                currPath.push(point);
-                paths.push(currPath);
-                currPath = [point];
-                points.splice(_(points).indexOf(point), 1);
-            }
-        }
-        currPath.push(this.path[i]);
-        paths.push(currPath);
-        return graph.path(paths[1], { stroke: KhanUtil.ORANGE, "stroke-width": 5 });
-    }
-
-    this.path = this.draw();
-}
-
-function lineLength(line) {
+window.lineLength = function(line) {
     var a = line[0];
     var b = line[1];
     return Math.sqrt((a[0] - b[0]) * (a[0] - b[0]) + (a[1] - b[1]) * (a[1] - b[1]));
-}
+};
 
-function dotProduct(a, b) {
-        return a[0] * b[0] + a[1] * b[1];
-}
-//http://www.blackpawn.com/texts/pointinpoly/default.html
-//Checks whether two points are on the same side of a line
-function sameSide(p1, p2, l) {
-    var a = l[0];
-    var b = l[1];
-
-    var cp1 = vectorProduct(b - a, p1 - a);
-    var cp2 = vectorProduct(b - a, p2 - a);
-
-    return (dotProduct(cp1, cp2) >= 0);
-}
 //Takes an array and an array of positions, all elements whose index is not in the positions array gets replaced by ""
 //Very useful for labels, for example, clearArray(["x", "x", "x"], [ANGLE]), where ANGLE is 1, will give you ["", "x", ""], which you can use to label angles in a Triangle such that the second angle is labeled x
 
-function clearArray(arr, i) {
+window.clearArray = function(arr, i) {
     return $.map(arr, function(el, index) {
         if ($.inArray(index, i) !== -1) {
             return el;
@@ -237,11 +92,11 @@ function clearArray(arr, i) {
             return "";
        }
     });
-}
+};
 
 //Used together with clearArray, for example mergeArray(clearArray(["x", "x", "x"], [ANGLE]), ["a","b","c"]), where ANGLE is 1, gives labels for a triangle ["a", "x", "c"]
 //need to be same length
-function mergeArray(ar1, ar2) {
+window.mergeArray = function(ar1, ar2) {
     var i = 0;
     for (i = 0; i < ar1.length; i++) {
         if (ar1[i] === "") {
@@ -249,10 +104,10 @@ function mergeArray(ar1, ar2) {
         }
     }
     return ar1;
-}
+};
 
-function isPointOnLineSegment(l, p, precision) {
-    var precision = precision || 0.1;
+window.isPointOnLineSegment = function(l, p, precision) {
+    precision = precision || 0.1;
     //If line is vertical
     if (Math.abs(l[1][0] - l[0][0]) < precision) {
         return (Math.abs(p[0] - l[0][0]) < precision) && (p[1] <= (Math.max(l[1][1], l[0][1]) + precision)) && (p[1] >= (Math.min(l[1][1], l[0][1]) - precision));
@@ -260,22 +115,10 @@ function isPointOnLineSegment(l, p, precision) {
     var m = (l[1][1] - l[0][1]) / (l[1][0] - l[0][0]);
     var k = l[0][1] - m * l[0][0];
     return (Math.abs(m * p[0] + k - p[1]) < precision);
-}
-
-function findPointsOnLine(l, ps) {
-    var points = [];
-    var ps = ps || [];
-    var i = 0;
-    for (i = 0; i < ps.length; i++) {
-        if (isPointOnLineSegment(l, ps[i])) {
-                points.push(ps[i]);
-        }
-    }
-    return points;
-}
+};
 
 //Are two polygons intersecting
-function areIntersecting(pol1, pol2) {
+window.areIntersecting = function(pol1, pol2) {
     var i, k = 0;
     for (i = 0; i < pol1.length; i++) {
         for (k = 0; k < pol2.length; k++) {
@@ -285,11 +128,11 @@ function areIntersecting(pol1, pol2) {
         }
     }
     return false;
-}
+};
 
 
 //Returns an intersection of two lines, and whether that point is inside both line segments
-function findIntersection(a, b) {
+window.findIntersection = function(a, b) {
     var tY = [0, a[0][1], a[1][1], b[0][1], b[1][1]];
     var tX = [0, a[0][0], a[1][0], b[0][0], b[1][0]];
 
@@ -298,103 +141,49 @@ function findIntersection(a, b) {
     var ub = ((tX[2] - tX[1]) * (tY[1] - tY[3]) - (tY[2] - tY[1]) * (tX[1] - tX[3])) / denominator;
     var isContained = (ua >= -0.01) && (ua <= 1.01) && (ub >= -0.01) && (ub <= 1.01);
     return [tX[1] + ua * (tX[2] - tX[1]), tY[1] + ua * (tY[2] - tY[1]), isContained];
+};
 
-}
-
-
-//Checks whether there are duplicate points in an array
-function checkDuplicate(arr, el) {
-    var i = 0;
-    for (i = 0; i < arr.length; i++) {
-        if (Math.sqrt((arr[i][0] - el[0]) * (arr[i][0] - el[0]) + (arr[i][1] - el[1]) * (arr[i][1] - el[1])) < 0.1) {
-            return true;
-        }
-    }
-    return false;
-}
-
-
-function pointLineDistance(p, l) {
-    var y = [l[0][1], l[1][1]];
-    var x = [l[0][0], l[1][0]];
-    var num = (y[0] - y[1]) * p[0] + (x[1] - x[0]) * p[1] + (x[0] * y[1] - x[1] * y[0]);
-    var den = Math.sqrt((x[1] - x[0]) * (x[1] - x[0]) + (y[1] - y[0]) * (y[1] - y[0]));
-    return num / den;
-}
-
-// Reflects a point p over line l
-function reflectPoint(l, p) {
-    var vx = l[1][0] - l[0][0];
-    var vy = l[1][1] - l[0][1];
-    var vl = Math.sqrt(vx * vx + vy * vy);
-    vx /= vl;
-    vy /= vl;
-
-    var dot = (p[0] - l[0][0]) * vx + (p[1] - l[0][1]) * vy;
-    var rx = l[0][0] + vx * dot;
-    var ry = l[0][1] + vy * dot;
-
-    return [rx + (rx - p[0]), ry + (ry - p[1])];
-}
-
-//Returns an array of points where a path intersects a line
-function linePathIntersection(l, p) {
-    var points = [];
-    var ps = p.graphiePath;
-    var l = l.graphiePath;
-    var i = 0;
-    for (i = 0; i < ps.length - 1; i = i + 2) {
-        var x = findIntersection([ps[i], ps[i + 1]], l);
-        if (x[2] === true && ! checkDuplicate(points, [x[0], x[1]])) {
-            points.push([x[0], x[1]]);
-        }
-    }
-    return points;
-}
-
-function degToRad(deg) {
+window.degToRad = function(deg) {
     return deg * Math.PI / 180;
-}
+};
 
 //Returns [ m, k ] of y = mx + k
 //Vulnerable to division by 0
-function lineEquation(line) {
-    var x = [line[0][0], line[1][0]];
-    var y = [line[0][1], line[1][1]];
+window.lineEquation = function(line) {
 
     var m = (line[1][1] - line[0][1]) / (line[1][0] - line[0][0]);
     var k = line[0][1] - m * line[0][0];
 
     return [m, k];
 
-}
+};
 
 //Given a line, returns a segment of that line of length amount starting at start
-function lineSegmentFromLine(start, line, amount) {
+window.lineSegmentFromLine = function(start, line, amount) {
 
     var eq = lineEquation(line);
     var m = eq[0];
     var angle = Math.atan(m);
     return [start, [start[0] + Math.cos(angle) * amount, start[1] + Math.sin(angle) * amount]];
 
-}
+};
 
 //Gives a line parralel to line going through point
-function parallelLine(line, point) {
+window.parallelLine = function(line, point) {
 
     var dif = [point[0] - line[0][0], point[1] - line[0][1]];
     return [point, [line[1][0] + dif[0], line[1][1] + dif[1]]];
 
-}
+};
 
-function movePoint(p, a) {
+window.movePoint = function(p, a) {
 
     return [p[0] + a[0], p[1] + a[1]];
-}
+};
 
 
 //Returns a line that bisects an angle defined by line1 and line2
-function bisectAngle(line1, line2, scale) {
+window.bisectAngle = function(line1, line2, scale) {
     var intPoint = findIntersection(line1, line2);
     var l1 = [];
     var l2 = [];
@@ -413,31 +202,26 @@ function bisectAngle(line1, line2, scale) {
     }
     return [intPoint, parallelLine(l1, l2[1])[1]];
 
-}
+};
 
-//Midpoint of a line
-function lineMidpoint(line) {
-    return [(line[0][0] + line[1][0]) / 2, (line[0][1] + line[1][1]) / 2];
-}
-
-function vectorProduct(line1, line2) {
+window.vectorProduct = function(line1, line2) {
     var x1 = line1[1][0] - line1[0][0];
     var x2 = line2[1][0] - line2[0][0];
     var y1 = line1[1][1] - line1[0][1];
     var y2 = line2[1][1] - line2[0][1];
     return x1 * y2 - x2 * y1;
-}
+};
 
 //For [a, b] returns [b , a]
-function reverseLine(line) {
+window.reverseLine = function(line) {
     return [line[1], line[0]];
-}
+};
 
-function Triangle(center, angles, scale, labels, points) {
+window.Triangle = function(center, angles, scale, labels, points) {
 
     var fromPoints = false;
     if (points) {
-            fromPoints = true;
+        fromPoints = true;
     }
 
     this.labels = labels;
@@ -500,23 +284,21 @@ function Triangle(center, angles, scale, labels, points) {
             return 0.7;
         }
         return 0.8;
-    }
+    };
 
     this.draw = function() {
-        this.set = KhanUtil.currentGraph.raphael.set();
+        this.set = this.set || KhanUtil.currentGraph.raphael.set();
         this.set.push(KhanUtil.currentGraph.path(this.points.concat([this.points[0]])));
         return this.set;
-    }
+    };
 
     this.color = "black";
     this.createLabel = function(p, v) {
-
+        this.set = this.set || KhanUtil.currentGraph.raphael.set();
         this.set.push(KhanUtil.currentGraph.label(p, v, "center", { color: this.color }));
-    }
+    };
 
-    this.boxOut = function(pol, amount, type) {
-        var type = type || "simple";
-        var intersectWith = this.sides;
+    this.boxOut = function(pol, amount) {
         var shouldMove = areIntersecting(pol, this.sides);
         while (areIntersecting(pol, this.sides)) {
             this.translate(amount);
@@ -524,7 +306,7 @@ function Triangle(center, angles, scale, labels, points) {
         if (shouldMove) {
             this.translate(amount);
         }
-    }
+    };
 
     this.boundingRange = function(margin) {
         margin = margin || 0;
@@ -532,7 +314,7 @@ function Triangle(center, angles, scale, labels, points) {
         var Y = $.map(this.points, function(p) { return p[1]; });
         return [[_.min(X) - margin, _.max(X) + margin],
              [_.min(Y) - margin, _.max(Y) + margin]];
-    }
+    };
 
     this.findCenterPoints = function() {
         var Ax = this.points[0][0];
@@ -542,9 +324,9 @@ function Triangle(center, angles, scale, labels, points) {
         var Cx = this.points[2][0];
         var Cy = this.points[2][1];
         var D = 2 * (Ax * (By - Cy) + Bx * (Cy - Ay) + Cx * (Ay - By));
-        var a = lineLength(this.sides[0]);
-        var b = lineLength(this.sides[1]);
-        var c = lineLength(this.sides[2]);
+        var a = this.sideLengths[1];
+        var b = this.sideLengths[2];
+        var c = this.sideLengths[0];
         var P = a + b + c;
         var x1 = (a * Ax + b * Bx + c * Cx) / P;
         var y1 = (a * Ay + b * By + c * Cy) / P;
@@ -553,9 +335,15 @@ function Triangle(center, angles, scale, labels, points) {
         this.circumCenter = [x, y];
         this.centroid = [1 / 3 * (Ax + Bx + Cx), 1 / 3 * (Ay + By + Cy)];
         this.inCenter = [x1, y1];
-    }
+    };
 
     this.findCenterPoints();
+
+    this.findRadii = function() {
+        this.semiperimeter = (this.sideLengths[0] + this.sideLengths[1] + this.sideLengths[2]) / 2;
+        this.inradius = this.scale / this.semiperimeter;
+        this.circumradius = this.sideLengths[0] * this.sideLengths[1] * this.sideLengths[2] / (4 * this.semiperimeter * this.inradius);
+    };
 
     this.rotationCenter = this.centroid;
 
@@ -567,7 +355,7 @@ function Triangle(center, angles, scale, labels, points) {
         });
         this.genSides();
         this.findCenterPoints();
-    }
+    };
 
     this.genSides = function() {
         this.sides = [];
@@ -575,42 +363,48 @@ function Triangle(center, angles, scale, labels, points) {
         for (x = 0; x < this.points.length; x++) {
             this.sides.push([this.points[x], this.points[(x + 1) % this.points.length]]);
         }
-    }
+    };
 
     this.translate = function(amount) {
         this.points = $.map(this.points, function(el, i) {
-                return [movePoint(el, amount)];
+            return [movePoint(el, amount)];
         });
         this.genSides();
         this.findCenterPoints();
-    }
+    };
 
     this.rotatePoint = function(pos, theta) {
-        var theta = theta || this.rotation;
+        theta = theta || this.rotation;
         return [this.rotationCenter[0] + (pos[0] - this.rotationCenter[0]) * Math.cos(theta) + (pos[1] - this.rotationCenter[1]) * Math.sin(theta), this.rotationCenter[1] + (-1) * ((pos[0] - this.rotationCenter[0]) * Math.sin(theta)) + ((pos[1] - this.rotationCenter[1]) * Math.cos(theta))];
-    }
+    };
 
     this.drawLabels = function() {
         var i = 0;
+        var s = KhanUtil.currentGraph.scaleVector([1, 1])[0];
+
         if ("points" in this.labels) {
             //Need to change the position of placement into label objects
             for (i = this.angles.length - 1; i >= 0; i--) {
-                this.labelObjects.points.push(this.createLabel(bisectAngle(reverseLine(this.sides[(i + 1) % this.angles.length]), this.sides[i], 0.3)[1], this.labels.points[(i + 1) % this.angles.length]));
+                var n = (i + 1) % this.angles.length;
+                var coord = bisectAngle(reverseLine(this.sides[n]), this.sides[i], 12 / s)[1];
+                this.labelObjects.points.push(this.createLabel(coord, this.labels.points[n]));
             }
         }
 
         if ("angles" in this.labels) {
             for (i = this.angles.length - 1; i >= 0; i--) {
-                this.labelObjects.angles.push(this.createLabel(bisectAngle(this.sides[(i + 1) % this.angles.length], reverseLine(this.sides[i]), this.angleScale(this.angles[(i + 1) % this.angles.length]))[1], this.labels.angles[(i + 1) % this.angles.length]));
+                var n = (i + 1) % this.angles.length;
+                var coord = bisectAngle(this.sides[n], reverseLine(this.sides[i]), this.angleScale(this.angles[n]) * 45 / s)[1];
+                this.labelObjects.angles.push(this.createLabel(coord, this.labels.angles[n]));
             }
         }
 
         if ("sides" in this.labels) {
             for (i = 0; i < this.sides.length; i++) {
                 //http://www.mathworks.com/matlabcentral/newsreader/view_thread/142201
-                var midPoint = lineMidpoint(this.sides[i]);
+                var midPoint = kline.midpoint(this.sides[i]);
                 var t = lineLength([this.sides[i][1], midPoint]);
-                var d = 0.5;
+                var d = 15 / s;
                 var x3 = midPoint[0] + (this.sides[i][1][1] - midPoint[1]) / t * d;
                 var y3 = midPoint[1] - (this.sides[i][1][0] - midPoint[0]) / t * d;
                 this.labelObjects.sides.push(this.createLabel([x3, y3], this.labels.sides[i]));
@@ -618,7 +412,7 @@ function Triangle(center, angles, scale, labels, points) {
         }
 
         if ("name" in this.labels) {
-                this.labelObjects["name"] = this.createLabel(bisectAngle(reverseLine(this.sides[2]), this.sides[1], 0.3)[1], this.labels.name);
+            this.labelObjects["name"] = this.createLabel(bisectAngle(reverseLine(this.sides[2]), this.sides[1], 0.3)[1], this.labels.name);
         }
 
 
@@ -635,10 +429,10 @@ function Triangle(center, angles, scale, labels, points) {
 
 
         return this.set;
-    }
+    };
 
-}
-function Quadrilateral(center, angles, sideRatio, labels, size) {
+};
+window.Quadrilateral = function(center, angles, sideRatio, labels, size) {
 
     this.sideRatio = sideRatio;
     this.angles = angles;
@@ -649,7 +443,7 @@ function Quadrilateral(center, angles, sideRatio, labels, size) {
     this.y = center[1];
     this.rotationCenter = [center[0], center[1]];
     this.set = "";
-    this.size = 10;
+    this.size = size || 10;
     this.cosines = $.map(this.radAngles, Math.cos);
     this.sines = $.map(this.radAngles, Math.sin);
     this.labels = labels || {};
@@ -691,22 +485,24 @@ function Quadrilateral(center, angles, sideRatio, labels, size) {
                 }
             }
         }
-    }
+    };
 
     this.sideTooShort = function() {
-        if (this.sideRatio === 1) return false;
+        if (this.sideRatio === 1) {
+            return false;
+        }
         var shortestSide = _.min(this.sideLengths);
         var allSides = _.reduce(this.sideLengths, function(acc,n) { return acc+n; }, 0);
         return shortestSide/allSides < 0.12 && {whichSide:_.indexOf(this.sideLengths,shortestSide)};
-    }
+    };
 
     this.isCrossed = function() {
         return (vectorProduct([this.points[0], this.points[1]], [this.points[0], this.points[2]]) > 0) || (vectorProduct([this.points[0], this.points[3]], [this.points[0], this.points[2]]) < 0);
-    }
+    };
 
     this.genSides = function() {
         this.sides = [[this.points[0], this.points[3]], [this.points[3], this.points[2]], [this.points[2], this.points[1]], [this.points[1], this.points[0]]];
-    }
+    };
 
     this.generatePoints();
 
@@ -716,13 +512,13 @@ function Quadrilateral(center, angles, sideRatio, labels, size) {
 
     area = 0.5 * vectorProduct([this.points[0], this.points[2]], [this.points[3], this.points[1]]);
 
-}
+};
 
 
 Quadrilateral.prototype = new Triangle([0, 0], [30, 30, 30], 3, "");
 
 //From http://en.wikipedia.org/wiki/Law_of_cosines
-function anglesFromSides(sides) {
+window.anglesFromSides = function(sides) {
         var c = sides[0];
         var a = sides[1];
         var b = sides[2];
@@ -730,20 +526,16 @@ function anglesFromSides(sides) {
         var beta = Math.round(Math.acos((a * a + c * c - b * b) / (2 * a * c)) * 180 / Math.PI);
         var alpha = Math.round(Math.acos((b * b + c * c - a * a) / (2 * b * c)) * 180 / Math.PI);
         return [alpha, beta, gamma];
-}
+};
 
 
 
-var randomTriangleAngles = {
+window.randomTriangleAngles = {
 
         triangle: function() {
             var a, b, c;
-            a = KhanUtil.randRange(35, 150);
-            b = KhanUtil.randRange(35, 180 - a);
-            if (a + b > 160) {
-                a = Math.max(30, a - 15);
-                b = Math.max(30, b - 15);
-            }
+            a = KhanUtil.randRange(30, 120);
+            b = KhanUtil.randRange(30, 150 - a);
             c = 180 - a - b;
             return [a, b, c];
         },
@@ -751,12 +543,8 @@ var randomTriangleAngles = {
         scalene: function() {
             var a, b, c;
             do {
-                a = KhanUtil.randRange(25, 150);
-                b = KhanUtil.randRange(25, 180 - a);
-                if (a + b > 170) {
-                    a = Math.max(30, a - 15);
-                    b = Math.max(30, b - 15);
-                }
+                a = KhanUtil.randRange(30, 120);
+                b = KhanUtil.randRange(30, 150 - a);
                 c = 180 - a - b;
             } while (a === b || a === c || b === c);
             return [a, b, c];
@@ -773,7 +561,7 @@ var randomTriangleAngles = {
 };
 
 
-var randomQuadAngles = {
+window.randomQuadAngles = {
 
         square: function() {
             return [90, 90, 90, 90];
@@ -832,45 +620,13 @@ var randomQuadAngles = {
         }
 };
 
-function newSquare(center) {
-    var center = center || [0, 0];
-    return new Quadrilateral(center, randomQuadAngles.square(), 1 , "", 3);
-}
-
-function newRectangle(center) {
-    var center = center || [0, 0];
-    return new Quadrilateral(center, randomQuadAngles.rectangle() , KhanUtil.randFromArray([0.2, 0.5, 0.7, 1.5]) , "", 3);
-}
-
-function newRhombus(center) {
-    var center = center || [0, 0];
-    return new Quadrilateral(center, randomQuadAngles.rhombus(), 1 , "", 3);
-}
-
-function newParallelogram(center) {
-    var center = center || [0, 0];
-    return new Quadrilateral(center, randomQuadAngles.parallelogram(), KhanUtil.randFromArray([0.2, 0.5, 0.7, 1.5]) , "", 3);
-}
-
-function newTrapezoid(center) {
-    var center = center || [0, 0];
-    return new Quadrilateral(center, randomQuadAngles.trapezoid(), KhanUtil.randFromArray([0.2, 0.5, 0.7, 1.5]) , "", 3);
-}
-
-function newKite(center) {
-    var center = center || [0, 0];
-    var angA = KhanUtil.randRange(90, 140);
-    var angB = KhanUtil.randRange(30, (360 - (2 * angA)) - 30);
-    var angC = 360 - angB - 2 * angA;
-    return new Quadrilateral(center, randomQuadAngles.kite(), 1 , "", 2);
-}
 
 $.extend(KhanUtil, {
 
     // Creates a representation of a weird blocky shape that you can find
     // the perimeter or area of
     createOddShape: function(options) {
-        shape = $.extend({
+        var shape = $.extend({
             width: 10,
             height: 10,
             squares: [],
@@ -1074,11 +830,11 @@ KhanUtil.solveTriangle = function(triangle) {
     if (numAngles === 3 && numSides >= 1) {
         var knownSide = sides.indexOf(sides[0] || sides[1] || sides[2]);
         sides[(knownSide + 1) % 3] = (sides[knownSide] *
-            Math.sin(angles[(knownSide + 1) % 3] * Math.PI / 180))
-            / Math.sin(angles[knownSide] * Math.PI / 180);
+            Math.sin(angles[(knownSide + 1) % 3] * Math.PI / 180)) /
+            Math.sin(angles[knownSide] * Math.PI / 180);
         sides[(knownSide + 2) % 3] = (sides[knownSide] *
-            Math.sin(angles[(knownSide + 2) % 3] * Math.PI / 180))
-            / Math.sin(angles[knownSide] * Math.PI / 180);
+            Math.sin(angles[(knownSide + 2) % 3] * Math.PI / 180)) /
+            Math.sin(angles[knownSide] * Math.PI / 180);
     }
 
     triangle.sides = sides;
@@ -1093,7 +849,7 @@ KhanUtil.solveTriangle = function(triangle) {
         return (this.angles[0] !== this.angles[1] &&
             this.angles[1] !== this.angles[2] &&
             this.angles[0] !== this.angles[2]);
-    }
+    };
 
     triangle.isNotDegenerate = function() {
         return (this.sides[1] + this.sides[2] > this.sides[0] &&
@@ -1123,19 +879,14 @@ KhanUtil.Graphie.prototype.addTriangle = function(triangle) {
         color: KhanUtil.BLUE
     }, triangle);
 
-    var getDistance = function(point1, point2) {
-        return Math.sqrt((point1[0] - point2[0]) * (point1[0] - point2[0])
-            + (point1[1] - point2[1]) * (point1[1] - point2[1]));
-    };
-
     var rotatePoint = function(point, angle) {
-        var matrix = KhanUtil.makeMatrix([
+        var matrix = kmatrix.makeMatrix([
             [Math.cos(angle), -Math.sin(angle), 0],
             [Math.sin(angle), Math.cos(angle), 0],
             [0, 0, 1]
         ]);
-        var vector = KhanUtil.makeMatrix([[point[0]], [point[1]], [1]]);
-        var prod = KhanUtil.matrixMult(matrix, vector);
+        var vector = kmatrix.makeMatrix([[point[0]], [point[1]], [1]]);
+        var prod = kmatrix.matrixMult(matrix, vector);
         return [prod[0][0], prod[1][0]];
     };
 
@@ -1204,7 +955,6 @@ KhanUtil.Graphie.prototype.addTriangle = function(triangle) {
                 var y = (triangle.points[(i + 1) % 3][1] +
                     triangle.points[(i + 2) % 3][1]) / 2;
                 var ang;
-                var labelDist = 0.4;
                 if (triangle.angles[i] < 90) {
                     ang = Math.atan2(y - centerPoints.circumCenter[1],
                         x - centerPoints.circumCenter[0]);
@@ -1236,6 +986,22 @@ KhanUtil.Graphie.prototype.addTriangle = function(triangle) {
                 triangle.labels.push(lbl);
             }
         });
+    };
+
+    // Return the points coorresponding to an alitude to angle[n]
+    triangle.findAltitude = function(n) {
+        var p1 = triangle.points[n];
+        var p2 = triangle.points[(n + 1) % 3];
+        var p3 = triangle.points[(n + 2) % 3];
+
+        // Project p1 onto line between p2 and p3
+        // Could use kvector's projection method
+        var v1 = [p1[0] - p2[0], p1[1] - p2[1]];
+        var v2 = [p3[0] - p2[0], p3[1] - p2[1]];
+        var dot1 = v1[0] * v2[0] + v1[1] * v2[1];
+        var dot2 = v2[0] * v2[0] + v2[1] * v2[1];
+        var s = dot1 / dot2;
+        return [p1, [p2[0] + v2[0] * s, p2[1] + v2[1] * s]];
     };
 
     triangle.points[2] = [0, 0];
@@ -1271,3 +1037,5 @@ KhanUtil.Graphie.prototype.addTriangle = function(triangle) {
 
     return triangle;
 };
+
+});

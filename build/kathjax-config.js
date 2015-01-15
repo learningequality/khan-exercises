@@ -20,14 +20,19 @@ MathJax.Hub.Config({
             red: "\\color{#DF0030}",
             green: "\\color{#28AE7B}",
             gray: "\\color{gray}",
-            purple: "\\color{#9D38BD}"
+            purple: "\\color{#9D38BD}",
+            // For rational exponents, we provide \^ instead of ^ which pushes
+            // the exponent up higher so it's really clear that the fraction
+            // is an exponent.
+            "^": ["{}^{^{^{#1}}}", 1]
         },
         Augment: {
             Definitions: {
                 macros: {
                     lrsplit: "LRSplit",
                     cancel: "Cancel",
-                    lcm: ["NamedOp", 0]
+                    lcm: ["NamedOp", 0],
+                    gcf: ["NamedOp", 0]
                 }
             },
             Parse: {
@@ -60,7 +65,9 @@ MathJax.Hub.Config({
 MathJax.Ajax.timeout = 60 * 1000;
 MathJax.Ajax.loadError = (function( oldLoadError ) {
     return function( file ) {
-        Khan.warnTimeout();
+        if (window.Khan) {
+          Khan.warnTimeout();
+        }
         // Otherwise will receive unresponsive script error when finally finish loading
         MathJax.Ajax.loadComplete = function( file ) { };
         oldLoadError.call( this, file );
@@ -68,7 +75,9 @@ MathJax.Ajax.loadError = (function( oldLoadError ) {
 })( MathJax.Ajax.loadError );
 
 MathJax.Hub.Register.StartupHook("HTML-CSS Jax - disable web fonts", function() {
-    Khan.warnFont();
+    if (window.Khan) {
+        Khan.warnFont();
+    }
 });
 
 // Trying to monkey-patch MathJax.Message.Init to not throw errors

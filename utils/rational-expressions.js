@@ -1,3 +1,5 @@
+define(function(require) {
+
 $.extend(KhanUtil, {
 
     getPermutations: function(arr) {
@@ -8,7 +10,7 @@ $.extend(KhanUtil, {
             for (var i = 0; i < input.length; i++) {
                 var term = input.splice(i, 1)[0];
                 usedChars.push(term);
-                if (input.length == 0) {
+                if (input.length === 0) {
                     permArr.push(usedChars.slice());
                 }
                 permute(input);
@@ -16,7 +18,7 @@ $.extend(KhanUtil, {
                 usedChars.pop();
             }
             return permArr;
-        };
+        }
 
         return permute(arr);
     },
@@ -48,13 +50,17 @@ $.extend(KhanUtil, {
          Term(5, {'x': 2}) = 5x^2
          Term(5, {'x': 1, 'y': 2}) = 5xy^2
     */
-    Term: function(coefficient, variables) {
+    Term: function(coefficient, variables, degree) {
         this.coefficient = coefficient;
         this.variables = {};
 
+        if (degree === undefined) {
+            degree = 1;
+        }
+
         if (typeof variables === 'string') {
             for (var i = 0; i < variables.length; i++) {
-                this.variables[variables.charAt(i)] = 1;
+                this.variables[variables.charAt(i)] = degree;
             }
         } else if (variables !== undefined){
             this.variables = variables;
@@ -63,7 +69,7 @@ $.extend(KhanUtil, {
         // Create a string representing the term
         // e.g. 5yx^2 = 5y1x2
         // Used for hashing
-        this.variableString = ''
+        this.variableString = '';
         for (var vari in this.variables) {
             if (this.variables[vari] !== 0) {
                 this.variableString += vari + this.variables[vari];
@@ -74,7 +80,7 @@ $.extend(KhanUtil, {
 
         this.isNegative = function() {
             return this.coefficient < 0;
-        }
+        };
 
         // Return a RationalExpression object representing the sum of this term with the passed object
         this.add = function(expression) {
@@ -103,16 +109,16 @@ $.extend(KhanUtil, {
             var value = this.coefficient;
 
             if (typeof values === 'number') {
-                for (var v in this.variables) {
-                    value *= Math.pow(values, this.variables[v]);
-                }
+                _.each(this.variables, function(v) {
+                    value *= Math.pow(values, v);
+                });
             } else {
-                for (var v in this.variables) {
-                    value *= Math.pow(values[v], this.variables[v]);
-                }
+                _.each(this.variables, function(v, i) {
+                    value *= Math.pow(values[i], v);
+                });
             }
             return value;
-        }
+        };
 
         // Return a new term representing this term multiplied by another term or a number
         this.multiply = function(term) {
@@ -121,11 +127,7 @@ $.extend(KhanUtil, {
             }
 
             var coefficient = this.coefficient;
-            var variables = {};
-
-            for (var i in this.variables) {
-                variables[i] = this.variables[i];
-            }
+            var variables = _.clone(this.variables);
 
             if (typeof term === 'number') {
                 coefficient *= term;
@@ -146,11 +148,7 @@ $.extend(KhanUtil, {
         // Return a new term representing this term divided by another term or a number
         this.divide = function(term) {
             var coefficient = this.coefficient;
-            var variables = {}
-
-            for (var i in this.variables) {
-                variables[i] = this.variables[i];
-            }
+            var variables = _.clone(this.variables);
 
             if (typeof term === 'number') {
                 coefficient /= term;
@@ -196,7 +194,6 @@ $.extend(KhanUtil, {
                 return '';
             }
 
-            var coefficient = Math.abs(this.coefficient);
             var s = '';
 
             if (includeSign) {
@@ -210,17 +207,15 @@ $.extend(KhanUtil, {
                 s += coefficient;
             }
 
-            for (var vari in this.variables) {
-                var degree = this.variables[vari];
-
+            _.each(this.variables, function(degree, i) {
                 if (degree === 0) {
-                    continue;
+                    return; // continue
                 }
-                s += vari;
+                s += i;
                 if (degree !== 1) {
                     s += '^' + degree;
                 }
-            }
+            });
             return s;
         };
 
@@ -249,16 +244,14 @@ $.extend(KhanUtil, {
                 }
             }
 
-            for (var vari in this.variables) {
-                var degree = this.variables[vari];
-                var value = (typeof values === 'number') ? values : values[vari];
-
+            _.each(this.variables, function(degree, i) {
+                var value = (typeof values === 'number') ? values : values[i];
                 if (color !== undefined) {
                     value = '\\' + color + '{' + value + '}';
                 }
 
                 s += (value < 0 || degree === 1) ? value : '(' + value + ')^' + degree;
-            }
+            });
 
             return s;
         };
@@ -276,18 +269,20 @@ $.extend(KhanUtil, {
                 return '';
             }
 
+            var regex;
+
             // Include leading space if there are earlier terms
             if (this.coefficient < 0){
-                var regex = includeSign ? '[-\\u2212]\\s*' : '\\s*[-\\u2212]\\s*';
+                regex = includeSign ? '[-\\u2212]\\s*' : '\\s*[-\\u2212]\\s*';
             } else {
-                var regex = includeSign ? '\\+\\s*' : '\\s*';
+                regex = includeSign ? '\\+\\s*' : '\\s*';
             }
 
             if (!(Math.abs(this.coefficient) === 1 && this.variableString !== '')) {
                 regex += Math.abs(this.coefficient);
             }
 
-            // Add all permuations of variables
+            // Add all permutations of variables
             var variable_array = [];
             for (var vari in this.variables) {
                 if (degree !== 0) {
@@ -296,11 +291,11 @@ $.extend(KhanUtil, {
             }
 
             if (variable_array.length > 1) {
-                permuations = KhanUtil.getPermutations(variable_array);
+                var permutations = KhanUtil.getPermutations(variable_array);
 
                 regex += "(?:";
-                for (var p=0; p<permuations.length; p++) {
-                    var variables = permuations[p];
+                for (var p=0; p<permutations.length; p++) {
+                    var variables = permutations[p];
 
                     regex += "(?:";
                     for (var i=0; i<variables.length; i++) {
@@ -308,7 +303,7 @@ $.extend(KhanUtil, {
                         var degree = variables[i][1];
                         regex += degree > 1 ? vari + "\\s*\\^\\s*" + degree : vari;
                     }
-                    regex += p < permuations.length - 1 ? ")|" : ")";
+                    regex += p < permutations.length - 1 ? ")|" : ")";
                 }
                 regex += ")";
 
@@ -319,7 +314,7 @@ $.extend(KhanUtil, {
             }
 
             return regex + '\\s*';
-        }
+        };
 
     },
 
@@ -336,12 +331,13 @@ $.extend(KhanUtil, {
 
         for (var i = 0; i < terms.length; i++) {
             var term = terms[i];
+            var newTerm;
             if (typeof term === 'number') {
-                var newTerm = new KhanUtil.Term(term);
+                newTerm = new KhanUtil.Term(term);
             } else if (term instanceof KhanUtil.Term) {
-                var newTerm = new KhanUtil.Term(term.coefficient, term.variables);
+                newTerm = new KhanUtil.Term(term.coefficient, term.variables);
             } else {
-                var newTerm = new KhanUtil.Term(term[0], term[1]);
+                newTerm = new KhanUtil.Term(term[0], term[1]);
             }
             if (newTerm.coefficient !== 0) {
                 this.terms.push(newTerm);
@@ -398,7 +394,7 @@ $.extend(KhanUtil, {
                 var found = false;
 
                 for (var j=0; j<n2; j++) {
-                    var t2 = that.terms[j]
+                    var t2 = that.terms[j];
                     if (t1.coefficient === t2.coefficient && t1.variableString === t2.variableString) {
                         found = true;
                         break;
@@ -479,13 +475,14 @@ $.extend(KhanUtil, {
 
         // Return a new expression representing the product of this one and the one passed in
         this.multiply = function(expression) {
+            var multiplyTerms;
             if (expression instanceof KhanUtil.RationalExpression) {
-                var multiplyTerms = expression.terms;
+                multiplyTerms = expression.terms;
             } else if (typeof expression === 'number' || expression instanceof KhanUtil.Term) {
-                var multiplyTerms = [expression];
+                multiplyTerms = [expression];
             } else {
                 // Assume it's a variable name
-                var multiplyTerms = [new KhanUtil.Term(1, expression)];
+                multiplyTerms = [new KhanUtil.Term(1, expression)];
             }
 
             var terms = [];
@@ -505,8 +502,8 @@ $.extend(KhanUtil, {
         // Assumes this expression can be factored to remove the one passed in
         this.divide = function(expression) {
             if (expression instanceof KhanUtil.RationalExpression) {
-                if (this.terms.length === 1) {
-                    return this.divideByTerm(expression.terms[0]);
+                if (expression.terms.length === 1) {
+                    return this.divide(expression.terms[0]);
                 }
 
                 var factors1 = this.factor();
@@ -551,7 +548,7 @@ $.extend(KhanUtil, {
             if (GCD.coefficient < 0) {
                 GCD.coefficient *= -1;
             }
-            return GCD
+            return GCD;
         };
 
         // Return a Term object representing the greatest common divisor of all the terms in this expression
@@ -575,7 +572,7 @@ $.extend(KhanUtil, {
             var gcd = this.getTermsGCD();
             var factor = this.divide(gcd);
             return [gcd, factor];
-        }
+        };
 
         this.toString = function() {
             if (this.terms.length === 0) {
@@ -637,7 +634,7 @@ $.extend(KhanUtil, {
                 regex += stop;
             }
             return regex;
-        }
+        };
 
         // Returns a single regex to capture this expression.
         // It will capture every permutations of terms so is
@@ -677,9 +674,11 @@ $.extend(KhanUtil, {
             } else {
                 regex += this.getTermsRegex(permutations, factors[0].regexForExpression() + "\\*?\\s*\\(", "\\)\\s*");
             }
-   
+
             return regex;
-        }
+        };
     }
+
+});
 
 });

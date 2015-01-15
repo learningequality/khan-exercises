@@ -1,4 +1,5 @@
 *.pyc
-_hashed-*.js
+.bundle
+node_modules
 exercises-packed
 exercises-packed.zip
