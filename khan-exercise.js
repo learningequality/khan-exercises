@@ -619,13 +619,40 @@ var Khan = $.extend(true, {
             $("#issue-title, #issue-body").val("");
         });
 
+        // When the Show Answer button of the issue form is clicked,
+        // we need to show all of the hints.
         $("#issue-show-answer").click(function(e) {
             e.preventDefault();
-            while (hints.length > 0) {
-                $("#hint").click();
-            }
-            $(this).addClass("disabled");
+
+            // If there is a hint available, we'll show it by clicking
+            // on the hint button. If there are no hints available,
+            // that means that we're done showing hints so we disable
+            // the Show Answer button.
+            var showHintIfAvailable = function showHintIfAvailable() {
+                // This button runs with both khan-exercise code and
+                // Perseus code. The only common place to look to see
+                // if there are more hints remaining is the state of the
+                // hint button.
+                if ($("#hint").attr("disabled")) {
+                    $(Exercises).off("hintShown", showHintIfAvailable);
+
+                    // "this" is bound to the Show Answer button itself
+                    $(this).addClass("disabled");
+                } else {
+                    $("#hint").click();
+                }
+            }.bind(this);
+
+            // The hintShown event is the key to looping through the
+            // hints. It is our signal that the asynchronously managed
+            // display of a hint has completed so that we can try to
+            // then show the next hint.
+            $(Exercises).on("hintShown", showHintIfAvailable);
+
+            // Kick off the cycle by showing the first hint.
+            showHintIfAvailable();
         });
+                
         $(Exercises).bind("newProblem", function() {
             $("#issue-show-answer").removeClass("disabled");
         });
@@ -769,7 +796,10 @@ var Khan = $.extend(true, {
                 $("#issue-throbber").hide();
             };
 
-            $.post("/api/internal/bigbingo/mark_conversions", {
+            // /_mt/ puts this on a multithreaded module, which is
+            // slower but cheaper.  We don't care how long this takes,
+            // so it's a good choice for us!
+            $.post("/api/internal/_mt/bigbingo/mark_conversions", {
                 conversion_ids: "exercise_submit_issue"
             });
 
@@ -1015,7 +1045,7 @@ function makeProblem(exerciseId, typeOverride, seedOverride) {
             var weight = $(this).data("weight") || 1;
             _.times(weight, function(){ typeIndex.push(index); });
         });
-        var typeNum = typeIndex[Math.floor(Math.random() * typeIndex.length)];
+        var typeNum = typeIndex[Math.floor(KhanUtil.random() * typeIndex.length)];
         problem = problems.eq(typeNum);
         currentProblemType = $(problem).attr("id") || "" + typeNum;
     }
@@ -1027,7 +1057,7 @@ function makeProblem(exerciseId, typeOverride, seedOverride) {
     // This should _never_ happen, and hopefully these autoSubmitIssues will help debug.
     if (!problem.length && problems.length) {
         Khan.autoSubmitIssue("type was for the incorrect problem; failed gracefully");
-        problem = problems.eq(Math.floor(Math.random() * problems.length));
+        problem = problems.eq(Math.floor(KhanUtil.random() * problems.length));
     }
 
     // Find which exercise this problem is from
@@ -1376,11 +1406,17 @@ function showHint() {
     var problem = $(hint).parent();
 
     // Append first so MathJax can sense the surrounding CSS context properly
-    $(hint).appendTo("#hintsarea").runModules(problem);
+    // Also add in some properties so that the hint is focusable
+    $(hint).attr({
+        tabIndex: "-1"
+    }).appendTo("#hintsarea").runModules(problem);
 
     if (hints.length === 0) {
         $(hint).addClass("last-hint");
     }
+
+    // Focus the hint, forcing it to be read by a screen reader
+    $(hint).focus();
 
     // TODO(james): figure out a way to trigger hintUsed to ensure that the
     // cards are updated properly, but make sure the ajax calls to
@@ -1981,7 +2017,7 @@ function loadExercise(exerciseId, fileName) {
         // into a jQuery object. IE8 will attempt to fetch these external
         // scripts otherwise.
         // See https://github.com/Khan/khan-exercises/issues/10957
-        data = data.replace(/<script(\s)+src=([^<])*<\/script>/, "");
+        data = data.replace(/<script[^>]+src=[^<]*<\/script>/, "");
 
         var newContents = $(data).filter(".exercise");
 
@@ -2122,7 +2158,7 @@ function loadMathJax() {
     if (window.MathJax) {
         waitForMathJaxReady();
     } else {
-        loadScript(Khan.urlBase + "third_party/MathJax/2.1/MathJax.js?config=KAthJax-8f02f65cba7722b3e529bd9dfa6ac25d", waitForMathJaxReady);
+        loadScript(Khan.urlBase + "third_party/MathJax/2.1/MathJax.js?config=KAthJax-eaf1d9cafdc2fc68897cf72d30d67d5a", waitForMathJaxReady);
     }
 
     function waitForMathJaxReady() {

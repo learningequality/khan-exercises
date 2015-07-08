@@ -60,6 +60,11 @@ div.definition {
 #extras li:before { content: "| "; }
 #extras li:first-child:before { content: ""; }
 
+#scratchpad-show {
+	position: relative;
+	z-index: 1;
+}
+
 #answer_area #check-answer-results { overflow: hidden; margin: 5px 0; }
 #answer_area #check-answer-results .check-answer-message { font-size: 12px; line-height: 20px; margin: 0; }
 #sad, #happy { float: left; margin: 0 6px 4px 0; }
@@ -166,7 +171,8 @@ body.debug .graphie { outline: 1px dashed #fdd; }
 
 #problemarea a:link,
 #problemarea input,
-#problemarea label { /* HACK(aria): for radios */
+#problemarea label,  /* HACK(aria): for radios */
+#problemarea select {  /* for dropdowns */
     position: relative; z-index: 3; /* interactive-content */
 }
 
@@ -339,7 +345,6 @@ body.debug .graphie { outline: 1px dashed #fdd; }
 
 #issue #issue-status.error { font-weight: bold; color: #A21; font-size: 1.2em; }
 #issue-link { font-style: italic; }
-#issue .issue-form label { display: block; }
 #issue .issue-form input[type=text] { display: block; width: 98%; }
 #issue .issue-form textarea { display: block; width: 98%; height: 100px; }
 #issue-cancel { float: right; }

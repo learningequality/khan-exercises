@@ -29,7 +29,7 @@
             <div id="hintsarea" class="hintsarea"></div>
         </div>
         <div id="answer_area_wrap"><div id="answer_area">
-            <input style="position: absolute; left: -9999px; width: 1px; height: 1px" type="submit">
+            <input style="position: absolute; left: -9999px; width: 1px; height: 1px" type="submit" aria-hidden="true">
             <div class="info-box" id="answercontent">
                 <span class="info-box-header">Answer</span>
                 <div class="solutionarea-placeholder"></div>
@@ -40,9 +40,9 @@
                 </div>
                 <!-- The value for the next-question button is populated by interface.js (determined by whether it is the last in the task) -->
                 <input class="simple-button green" id="next-question-button" name="correctnextbutton" style="display:none;" type="button" value="">
-                <div id="positive-reinforcement"><img src="/images/face-smiley.png"></div>
+                <div id="positive-reinforcement"><img src="/images/face-smiley.png" alt="Smiley Face"></div>
                 <span id="show-solution-button-container"></span>
-                <div id="check-answer-results"><p class="check-answer-message info-box-sub-description"></p></div>
+                <div id="check-answer-results"><p class="check-answer-message info-box-sub-description" role="alert" aria-atomic="true"></p></div>
                 </div>
             </div>
             <div class="info-box" id="readonly">

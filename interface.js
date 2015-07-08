@@ -7,7 +7,207 @@
  */
 (function() {
 
-var REQUEST_TIMEOUT_MS = 30000;
+var ServerActionQueue = {
+    LOCAL_STORAGE_KEY: "exercises-server-action-queue",
+    ACTION_TIMEOUT_MS: 100,
+
+    queue: [],
+    timeoutSet: false,
+    timeoutMultiplier: 1,
+
+    /**
+     * Reads queued from local storage. If the queue is empty do nothing,
+     * otherwise call the timeout function to consume the actions.
+     *
+     * WARNING: If this function is called twice and we are in the middle
+     * of a request the second time (i.e. the request has been sent but
+     * the response has not been received yet) there is the possibility
+     * that we will have the same request sent twice because the pending
+     * request is still in the queue.
+     */
+    initialize: function() {
+        this.queue = LocalStore.get(this.LOCAL_STORAGE_KEY);
+        if (this.queue === null) {
+            this.queue = [];
+        }
+        if (this.queue.length > 0) {
+            this.onTimeout();
+        }
+    },
+
+    /**
+     * Attempts to send requests, if all the requests are sent then don't
+     * reset the timeout. Otherwise reset the timeout.
+     */
+    onTimeout: function() {
+        this.timeoutSet = false;
+        this.consumeQueue();
+    },
+
+    /**
+     * Removes the next action in the queue and returns it.
+     *
+     * @returns {object} The next action from the queue.
+     */
+    dequeue: function() {
+        output = this.queue.shift();
+        LocalStore.set(this.LOCAL_STORAGE_KEY, this.queue);
+        return output;
+    },
+
+    /**
+     * Arm the timeout and increment the timeoutMultiplier
+     */
+    armTimeout: function() {
+        if (!this.timeoutSet) {
+            this.timeoutSet = true;
+            setTimeout(_.bind(this.onTimeout, this),
+                       this.ACTION_TIMEOUT_MS * this.timeoutMultiplier);
+        }
+
+        // Increment timeoutMultiplier but max at 20
+        this.timeoutMultiplier = Math.min(20, this.timeoutMultiplier+1);
+    },
+
+    /**
+     * If we are connected to the server this will recursively consume the queue of
+     * pending server actions. Otherwise, this will reset the timeout to be called
+     * again later.
+     */
+    consumeQueue: function() {
+        if (this.queue.length === 0) {
+            return;
+        }
+
+        action = ServerActionEnum[this.peek().action];
+        actionArgs = this.peek().actionArgs;
+        retriesLeft = this.peek().retriesLeft;
+        action.apply(null, actionArgs).done(function() {
+            // We succeeded so remove this from the queue and reset timeoutMultiplier
+            ServerActionQueue.timeoutMultiplier = 1;
+            ServerActionQueue.dequeue();
+            ServerActionQueue.consumeQueue();
+        }).fail(function(xhr) {
+            // When we aren't connected to the sesrver we don't get a proper response
+            // so responseText is undefined
+            if (xhr.status === 0) {
+                // We didn't receive a response from the server, reset timeout.
+                ServerActionQueue.armTimeout();
+            } else {
+                // We received an error from the server, retry or remove from the queue
+                if (retriesLeft > 0) {
+                    ServerActionQueue.peek().retriesLeft -= 1;
+                    LocalStore.set(ServerActionQueue.LOCAL_STORAGE_KEY,
+                                   ServerActionQueue.queue);
+                    ServerActionQueue.armTimeout();
+                } else {
+                    ServerActionQueue.dequeue();
+                    ServerActionQueue.consumeQueue();
+                }
+            }
+        });
+    },
+
+    /**
+     * Returns next item from queue without removing it.
+     */
+    peek: function() {
+        return this.queue[0];
+    },
+
+    /**
+     * Add a new action to the queue of actions to be called.
+     * @param {string} action - The string mapping to the callback function in
+     *                 ServerActionEnum. The callback MUST return a promise
+     *                 object so we can know if a request fails or succeeds
+     * @param {list} actionArgs - The list of arguments to be passed to the
+     *               callback for the action. All of these arguments must be
+     *               JSON serializable.
+     * @param {int} retries - Number of retries allowed for server errors
+     */
+    enqueue: function(action, actionArgs, retries) {
+        this.queue.push({action: action, actionArgs: actionArgs,
+                         retriesLeft: retries});
+        LocalStore.set(this.LOCAL_STORAGE_KEY, this.queue);
+        this.armTimeout();
+    },
+};
+
+ServerActionEnum = {
+    "makeAttempt": saveAttemptToServer,
+    "hintRequest": request,
+};
+
+function saveAttemptToServer(url, attemptData) {
+    // Save the problem results to the server
+    promise = request(url, attemptData).fail(function(xhr) {
+        // Alert any listeners of the error before reload
+        $(Exercises).trigger("attemptError");
+
+        if (inUnload) {
+            // This path gets called when there is a broken pipe during
+            // page unload- browser navigating away during ajax request
+            // See http://stackoverflow.com/a/1370383.
+            return;
+        }
+
+        // Error during submit. Disable the page and ask users to
+        // reload in an attempt to get updated data.
+
+        // Hide the page so users don't continue, then warn the user about the
+        // problem and encourage reloading the page
+        $("#problem-and-answer").css("visibility", "hidden");
+
+        if (xhr.statusText === "timeout") {
+            // TODO(david): Instead of throwing up this error message, try
+            //     retrying the request or something. See more details in
+            //     comment in request().
+            $(Exercises).trigger("warning",
+                    $._("Uh oh, it looks like a network request timed out! " +
+                        "You'll need to " +
+                        "<a href='%(refresh)s'>refresh</a> to continue. " +
+                        "If you think this is a mistake, " +
+                        "<a href='http://www.khanacademy.org/reportissue?" +
+                        "type=Defect'>tell us</a>.",
+                        {refresh: _.escape(window.location.href)}
+                    )
+            );
+        } else {
+            $(Exercises).trigger("warning",
+                    $._("This page is out of date. You need to " +
+                        "<a href='%(refresh)s'>refresh</a>, but don't " +
+                        "worry, you haven't lost progress. If you think " +
+                        "this is a mistake, " +
+                        "<a href='http://www.khanacademy.org/reportissue?" +
+                        "type=Defect'>tell us</a>.",
+                        {refresh: _.escape(window.location.href)}
+                    )
+            );
+        }
+
+        // Also log this failure to a bunch of places so we can see
+        // how frequently this occurs, and if it's similar to the frequency
+        // that we used to get for the endless spinner at end of task card
+        // logs.
+        var logMessage = "[" + (+new Date()) + "] request to " +
+            url + " failed (" + xhr.status + ", " + xhr.statusText + ") " +
+            "with " + (Exercises.pendingAPIRequests - 1) +
+            " other pending API requests: " + attemptOrHintQueueUrls +
+            " (in khan-exercises/interface.js:handleAttempt)";
+
+        // Log to app engine logs... hopefully.
+        $.post("/sendtolog", {message: logMessage, with_user: 1});
+
+        // Also log to Sentry via Raven, just for some redundancy in case
+        // the above request doesn't make it to our server somehow.
+        if (window.Raven) {
+            window.Raven.captureMessage(
+                    logMessage, {tags: {ipaddebugging: true}});
+        }
+    });
+    return promise;
+}
+
 
 // If any of these properties have already been defined, then leave them --
 // this happens in local mode
@@ -17,7 +217,9 @@ _.defaults(Exercises, {
     getCurrentFramework: function(userExerciseOverride) {
         return (userExerciseOverride || userExercise).exerciseModel.fileName ?
             "khan-exercises" : "perseus";
-    }
+    },
+
+    requestTimeoutMillis: 30000
 });
 
 _.extend(Exercises, {
@@ -55,7 +257,8 @@ var PerseusBridge = Exercises.PerseusBridge,
     numHints,
     hintsUsed,
     lastAttemptOrHint,
-    lastAttemptContent;
+    lastAttemptContent,
+    currentExercise;
 
 $(Exercises)
     .bind("problemTemplateRendered", problemTemplateRendered)
@@ -150,6 +353,33 @@ function newProblem(e, data) {
     lastAttemptOrHint = new Date().getTime();
     lastAttemptContent = null;
 
+    if (!localMode && KA.GANDALF_EXERCISES_SERVER_QUEUE) {
+        storedExercise = LocalStore.get("currentExercise");
+        if (storedExercise != null &&
+            storedExercise.exercise === data.userExercise.exercise &&
+            storedExercise.problemNum === problemNum) {
+
+            currentExercise = storedExercise;
+
+            while (hintsUsed < storedExercise.hintsUsed) {
+                var framework = Exercises.getCurrentFramework();
+                if (framework === "perseus") {
+                    $(PerseusBridge).trigger("showHint");
+                } else if (framework === "khan-exercises") {
+                    $(Khan).trigger("showHint");
+                }
+            }
+        }
+
+        // Store currentExercise w/ hints used in local storage (above we
+        // should check if the exercise is already stored and update hintsUsed
+        // as appropriate)
+        currentExercise = {exercise: data.userExercise.exercise,
+                           hintsUsed: hintsUsed,
+                           problemNum: problemNum};
+        LocalStore.set("currentExercise", currentExercise);
+    }
+
     var framework = Exercises.getCurrentFramework();
     $("#problem-and-answer")
             .removeClass("framework-khan-exercises")
@@ -228,11 +458,15 @@ function handleAttempt(data) {
     var skipped = data.skipped;
     var optOut = data.optOut;
     var score;
+    var itemId;
 
+    // Score the attempt
     if (framework === "perseus") {
         score = PerseusBridge.scoreInput();
+        itemId = PerseusBridge.getSeedInfo().seed;
     } else if (framework === "khan-exercises") {
         score = Khan.scoreInput();
+        itemId = Khan.getSeedInfo().seed;
     }
 
     if (!canAttempt) {
@@ -244,49 +478,37 @@ function handleAttempt(data) {
     var isAnswerEmpty = score.empty && !skipped;
     var attemptMessage = null;
 
-    // A temporary list of exercises participating in the targeted feedback
-    // clues experiment
-    // TODO(ilan): Remove this hack once the exeriment is over
-    var TARGETED_CLUES_EXERCISES = [
-        "dividing-fractions-by-fractions-word-problems",
-        "interpret-features-func-2",
-        "quadratic-formula-with-complex-solutions",
-        "using-zeros-to-graph-polynomials",
-        "naming-shapes-2"
-    ];
-
-    // Is there a message to be shown?
+    // When the user answers incorrectly, we might show a message in response.
+    // It might encourage the user to think about their answer's format (eg.
+    // simplify the fraction) or it might explain to the user why the answer
+    // was wrong (these are referred to as clues in code, though in
+    // conversation we call them rationales). We show nothing at all if that
+    // content doesn't exist.
     if (score.message != null) {
-        if (Exercises.currentCard) {
-            var exerciseName = Exercises.currentCard.attributes.exerciseName;
-            if (TARGETED_CLUES_EXERCISES.indexOf(exerciseName) >= 0) {
-                // Don't show clues to people who are not in the right
-                // experimental group
-                if (score.correct || score.empty || Exercises.cluesEnabled) {
-                    attemptMessage = score.message;
-                    // If the message is a clue
-                    if (!(score.correct || score.empty)) {
-                        if (typeof window.BigBingo !== "undefined") {
-                            window.BigBingo.markConversion("clue_seen_" +
-                                exerciseName.replace(/-/g, "_")); // For BigBingo
-                        }
-                    }
-                }
-            } else {
-                attemptMessage = score.message;
-            }
-        } else {
-            attemptMessage = score.message;
-        }
+        attemptMessage = score.message;
     } else if (isAnswerEmpty) {
         attemptMessage = EMPTY_MESSAGE;
     }
 
+    // We need to alert the user when the given answer is incorrect
+    if (!attemptMessage && !(score.correct || skipped)) {
+        attemptMessage = $._("Incorrect answer, please try again.");
+    }
+
+    var $attemptMessage = $("#check-answer-results > p");
+
     if (attemptMessage) {
-        $("#check-answer-results > p").html(attemptMessage).show().tex();
+        // NOTE(jeresig): If the message is identical to the message that
+        // was there before then the ARIA alert is not triggered. We add in
+        // an extra space to force the alert to trigger.
+        var isIdentical = attemptMessage === $attemptMessage.text();
+
+        $attemptMessage
+            .html(attemptMessage + (isIdentical ? " " : "")).show().tex();
+
         $(Exercises).trigger("attemptMessageShown", attemptMessage);
     } else {
-        $("#check-answer-results > p").hide();
+        $attemptMessage.hide();
     }
 
     // Stop if the user didn't try to skip the question and also didn't yet
@@ -331,6 +553,7 @@ function handleAttempt(data) {
 
     $(Exercises).trigger("checkAnswer", {
         correct: score.correct,
+        item: itemId,
         card: Exercises.currentCard,
         optOut: optOut,
         // Determine if this attempt qualifies as fast completion
@@ -364,15 +587,22 @@ function handleAttempt(data) {
     } else {
         // Wrong answer. Enable all the input elements
 
-        $("#check-answer-button")
-            .parent()  // .check-answer-wrapper makes shake behave
-            .effect("shake", {times: 3, distance: 5}, 480)
-            .val($._("Try Again"));
+        // NOTE(jeresig): The wrong answer wiggling has been disabled as
+        // it causes a re-focus on the answer button to occur, making it
+        // impossible to hear what the effect of the press was in a
+        // screen reader.
+        //$("#check-answer-button")
+            //.parent()  // .check-answer-wrapper makes shake behave
+            //.effect("shake", {times: 3, distance: 5}, 480);
 
         if (framework === "perseus") {
             // TODO(alpert)?
         } else if (framework === "khan-exercises") {
-            $(Khan).trigger("refocusSolutionInput");
+            // NOTE(jeresig): Auto-focusing back on to the input when an
+            // incorrect answer is given has been disabled. It didn't
+            // happen when using the mouse and if you used the keyboard
+            // it made the screen reader really confused.
+            //$(Khan).trigger("refocusSolutionInput");
         }
     }
 
@@ -402,80 +632,29 @@ function handleAttempt(data) {
         return false;
     }
 
+    // If we're in a practice task but not at the end of it (so the
+    // user will be doing another question next), let's make the
+    // request on the multithreaded module: we don't care that much
+    // how long the request takes (it happens while the user is trying
+    // the next question) and it's cheaper.
+    var useMultithreadedModule = (
+        !score.correct ||
+        (Exercises.learningTask && !Exercises.learningTask.isComplete()));
+
+    var url = fullUrl(
+            "problems/" + problemNum + "/attempt", useMultithreadedModule);
+
     // This needs to be after all updates to Exercises.currentCard (such as the
     // "problemDone" event) or it will send incorrect data to the server
     var attemptData = buildAttemptData(
             score.correct, ++attempts, stringifiedGuess, timeTaken, skipped,
             optOut);
 
-    // Save the problem results to the server
-    var requestUrl = "problems/" + problemNum + "/attempt";
-    request(requestUrl, attemptData).fail(function(xhr) {
-        // Alert any listeners of the error before reload
-        $(Exercises).trigger("attemptError");
-
-        var requestTimedOut = (xhr.statusText === "timeout");
-        if (xhr && xhr.readyState === 0 && !requestTimedOut) {
-            // This path gets called when there is a broken pipe during
-            // page unload- browser navigating away during ajax request
-            // See http://stackoverflow.com/a/1370383.
-            return;
-        }
-
-        // Error during submit. Disable the page and ask users to
-        // reload in an attempt to get updated data.
-
-        // Hide the page so users don't continue, then warn the user about the
-        // problem and encourage reloading the page
-        $("#problem-and-answer").css("visibility", "hidden");
-
-        if (requestTimedOut) {
-            // TODO(david): Instead of throwing up this error message, try
-            //     retrying the request or something. See more details in
-            //     comment in request().
-            $(Exercises).trigger("warning",
-                    $._("Uh oh, it looks like a network request timed out! " +
-                        "You'll need to " +
-                        "<a href='%(refresh)s'>refresh</a> to continue. " +
-                        "If you think this is a mistake, " +
-                        "<a href='http://www.khanacademy.org/reportissue?" +
-                        "type=Defect'>tell us</a>.",
-                        {refresh: _.escape(window.location.href)}
-                    )
-            );
-
-            // Also log this timeout failure to a bunch of places so we can see
-            // how frequently this occurs, and if it's similar to the frequency
-            // that we used to get for the endless spinner at end of task card
-            // logs.
-            var logMessage = "[" + (+new Date()) + "] request to " +
-                requestUrl + " timed out after " + REQUEST_TIMEOUT_MS +
-                "ms with " + Exercises.pendingAPIRequests +
-                " pending API requests " +
-                "(in khan-exercises/interface.js:handleAttempt)";
-
-            // Log to app engine logs... hopefully.
-            $.post("/sendtolog", {message: logMessage, with_user: 1});
-
-            // Also log to Sentry via Raven, just for some redundancy in case
-            // the above request doesn't make it to our server somehow.
-            if (window.Raven) {
-                window.Raven.captureMessage(logMessage,
-                        {tags: {ipaddebugging: true}});
-            }
-        } else {
-            $(Exercises).trigger("warning",
-                    $._("This page is out of date. You need to " +
-                        "<a href='%(refresh)s'>refresh</a>, but don't " +
-                        "worry, you haven't lost progress. If you think " +
-                        "this is a mistake, " +
-                        "<a href='http://www.khanacademy.org/reportissue?" +
-                        "type=Defect'>tell us</a>.",
-                        {refresh: _.escape(window.location.href)}
-                    )
-            );
-        }
-    });
+    if (!localMode && KA.GANDALF_EXERCISES_SERVER_QUEUE) {
+        ServerActionQueue.enqueue("makeAttempt", [url, attemptData], 3);
+    } else {
+        saveAttemptToServer(url, attemptData);
+    }
 
     if (skipped && !Exercises.assessmentMode) {
         // Skipping should pull up the next card immediately - but, if we're in
@@ -505,7 +684,6 @@ function onShowExampleClicked() {
     $(PerseusBridge).trigger("showWorkedExample");
 }
 
-var waitingOnHintRequest = false;
 /**
  * Handle the event when a user clicks to use a hint.
  *
@@ -515,85 +693,50 @@ var waitingOnHintRequest = false;
  * that the XHR can be sent after the other items have a chance to respond.
  */
 function onHintButtonClicked() {
-    if (waitingOnHintRequest) {
-        return;
-    }
-    waitingOnHintRequest = true;
-
     var curTime = new Date().getTime();
-    var prevLastAttemptOrHint = lastAttemptOrHint;
     var timeTaken = Math.round((curTime - lastAttemptOrHint) / 1000);
     lastAttemptOrHint = curTime;
     var logEntry = ["hint-activity", "0", timeTaken];
     Exercises.userActivityLog.push(logEntry);
 
-    var hintRequest;
     if (!previewingItem && !localMode && !userExercise.readOnly &&
             !Exercises.currentCard.get("preview") && canAttempt) {
 
-        // buildAttemptData reads the number of hints we have taken from hintsUsed.
-        // However, we haven't updated that yet since we haven't gotten a response
-        // back, from, you guessed it, this request itself. So we increment
-        // hintsUsed while forming this request so that it gets the number of hints
-        // that will have been used when this request returns successfully.
+        // buildAttemptData reads the number of hints we have taken
+        // from hintsUsed.  However, we haven't updated that yet since
+        // we haven't gotten a response back, from, you guessed it,
+        // this request itself. So we increment hintsUsed while
+        // forming this request so that it gets the number of hints
+        // that will have been used when this request returns
+        // successfully.
         hintsUsed++;
-        hintRequest = request("problems/" + problemNum + "/hint",
-                buildAttemptData(false, attempts, "hint", timeTaken, false, false));
+        // Always put hints on the (cheaper) multithreaded module,
+        // since we don't care what the API call returns so we don't
+        // care how slow it is.
+        var url = fullUrl("problems/" + problemNum + "/hint", true);
+        var attemptData = buildAttemptData(false, attempts, "hint",
+                                           timeTaken, false, false);
+        if (!localMode && KA.GANDALF_EXERCISES_SERVER_QUEUE) {
+            ServerActionQueue.enqueue("hintRequest", [url, attemptData], 3);
+        } else {
+            request(url, attemptData);
+        }
         hintsUsed--;
-    } else {
-        // We don't send a request to the server, so just assume immediate
-        // success
-        hintRequest = $.when();
     }
 
-    // If the hint request fails within TIMEOUT_MS, it probably means that the
-    // student's internet is offline and that maybe they're trying to cheat. To
-    // prevent this, we always wait TIMEOUT_MS before showing a hint; if the
-    // network request fails before the timeout we don't show the hint and
-    // pretend that nothing happened.
-    var TIMEOUT_MS = 50;
-    var showHintD = $.Deferred();
+    var framework = Exercises.getCurrentFramework();
+    if (framework === "perseus") {
+        $(PerseusBridge).trigger("showHint");
+    } else if (framework === "khan-exercises") {
+        $(Khan).trigger("showHint");
+    }
 
-    hintRequest.then(function() {
-        if (showHintD.state() === "pending") {
-            showHintD.resolve();
-        }
-    }, function() {
-        if (showHintD.state() === "pending") {
-            showHintD.reject();
-        }
-    });
-
-    // Always show the hint after TIMEOUT_MS
-    setTimeout(function() {
-        if (showHintD.state() === "pending") {
-            showHintD.resolve();
-        }
-    }, TIMEOUT_MS);
-
-    showHintD.always(function() {
-        waitingOnHintRequest = false;
-    }).done(function() {
-        var framework = Exercises.getCurrentFramework();
-        if (framework === "perseus") {
-            $(PerseusBridge).trigger("showHint");
-        } else if (framework === "khan-exercises") {
-            $(Khan).trigger("showHint");
-        }
-    }).fail(function() {
-        KhanUtil.debugLog("Hint network request failed; not showing hint");
-        // Set global state back to how it was
-        // TODO(alpert): Really we should store this in a snapshottable way
-        // (e.g., with persistent data structures) so that this is easy...
-        lastAttemptOrHint = prevLastAttemptOrHint;
-        // Filter out the hint activity entry in place
-        var ual = Exercises.userActivityLog;
-        for (var i = ual.length; i-- > 0;) {
-            if (ual[i] === logEntry) {
-                ual.splice(i, 1);
-            }
-        }
-    });
+    if (!localMode && KA.GANDALF_EXERCISES_SERVER_QUEUE) {
+        // onHintShown updated the hintsUsed so we should save that to
+        // localStorage.
+        currentExercise.hintsUsed = hintsUsed;
+        LocalStore.set("currentExercise", currentExercise);
+    }
 }
 
 function onHintShown(e, data) {
@@ -674,11 +817,8 @@ function buildAttemptData(correct, attemptNum, attemptContent, timeTaken,
 
         user_mission_id: Exercises.userMissionId,
 
-        // The current card data
-        card: JSON.stringify(Exercises.currentCard),
-
         // The current topic, if any
-        topic_slug: Exercises.topic && Exercises.topic.get("slug"),
+        topic_slug: Exercises.topicSlug,
 
         // The user assessment key if in assessmentMode
         user_assessment_key: Exercises.userAssessmentKey,
@@ -687,32 +827,60 @@ function buildAttemptData(correct, attemptNum, attemptContent, timeTaken,
         skipped: skipped ? 1 : 0,
 
         // Whether the user is opting out of the task
-        opt_out: optOut ? 1 : 0
+        opt_out: optOut ? 1 : 0,
+
+        // The client-reported datetime in local time (not UTC!).
+        // Used by streaks.
+        client_dt: moment().format()
     });
 
     return data;
 }
 
 
-var attemptHintQueue = jQuery({});
+var inUnload = false;
+
+$(window).on("beforeunload", function() {
+    inUnload = true;
+});
 
 // If there are any requests left in the queue when the window unloads then we
 // will have permanently lost their answers and will need to clear the session
 // cache, to make sure we don't override what is passed down from the servers
 $(window).unload(function() {
-    if (attemptHintQueue.queue().length) {
+    if (attemptOrHintQueue.queue().length) {
         $(Exercises).trigger("attemptError");
     }
 });
 
-function request(method, data) {
-    var apiBaseUrl = (Exercises.assessmentMode ?
-            "/api/internal/user/assessment/exercises" :
-            "/api/internal/user/exercises");
+function fullUrl(method, useMultithreadedModule) {
+    // The multithreaded module is slower but cheaper.  We use it for
+    // all hints, and problem-attempts that we know are not the last
+    // attempt in a task.  (This is because it usually takes people at
+    // least a few seconds to read a hint or attempt the next problem,
+    // which is plenty of time even when on the slower module.)
+    var apiBaseUrl;
+    if (Exercises.assessmentMode && useMultithreadedModule) {
+        apiBaseUrl = "/api/internal/_mt/user/assessment/exercises";
+    } else if (Exercises.assessmentMode) {
+        apiBaseUrl = "/api/internal/user/assessment/exercises";
+    } else if (useMultithreadedModule) {
+        apiBaseUrl = "/api/internal/_mt/user/exercises";
+    } else {
+        apiBaseUrl = "/api/internal/user/exercises";
+    }
 
+    return apiBaseUrl + "/" + userExercise.exerciseModel.name + "/" + method;
+}
+
+var attemptOrHintQueue = jQuery({});
+// Used for error reporting: what urls are in the queue when an error happens?
+var attemptOrHintQueueUrls = [];
+
+function request(url, data) {
     var params = {
         // Do a request to the server API
-        url: apiBaseUrl + "/" + userExercise.exerciseModel.name + "/" + method,
+        url: url,
         type: "POST",
         data: data,
         dataType: "json",
@@ -735,13 +903,17 @@ function request(method, data) {
         // the red error bar, which, although jarring, is hopefully less bad
         // than being stuck with an endless spinner before the end of task
         // card and then losing all progress since the first dropped request.
-        timeout: REQUEST_TIMEOUT_MS
+        timeout: Exercises.requestTimeoutMillis
     };
 
     var deferred = $.Deferred();
 
-    attemptHintQueue.queue(function(next) {
+    attemptOrHintQueue.queue(function(next) {
+        var requestEndedParameters;
+
+        attemptOrHintQueueUrls.push(params.url);
         $.kaOauthAjax(params).then(function(data, textStatus, jqXHR) {
+            // This line calls any callbacks registered with the promise
             deferred.resolve(data, textStatus, jqXHR);
 
             // Tell any listeners that we now have new userExercise data
@@ -750,16 +922,31 @@ function request(method, data) {
                 source: "serverResponse"
             });
         }, function(jqXHR, textStatus, errorThrown) {
-            // Execute passed error function first in case it wants different
-            // behavior depending upon the length of the request queue
-            // TODO(alpert): Huh? Don't think this matters.
+            // Execute passed error function first in case it wants
+            // to log the request queue or something like that.
             deferred.reject(jqXHR, textStatus, errorThrown);
 
             // Clear the queue so we don't spit out a bunch of queued up
-            // requests after the error
-            attemptHintQueue.clearQueue();
+            // requests after the error.
+            // TODO(csilvers): do we need to call apiRequestEnded for
+            // all these as well?  Exercises.pendingAPIRequests is now off.
+            attemptOrHintQueue.clearQueue();
+            attemptOrHintQueueUrls = [];
+
+            requestEndedParameters = {
+                "error": {
+                    textStatus: textStatus,
+                    errorThrown: errorThrown
+                }
+            };
         }).always(function() {
-            $(Exercises).trigger("apiRequestEnded");
+            var attemptedUrl = attemptOrHintQueueUrls.pop();
+            // Sanity check.  attemptedUrl will be undefined on send-error.
+            if (attemptedUrl && attemptedUrl !== params.url) {
+                KhanUtil.debugLog("We just sent " + params.url + " but " +
+                                  attemptedUrl + " was at queue-front!");
+            }
+            $(Exercises).trigger("apiRequestEnded", requestEndedParameters);
             next();
         });
     });
@@ -771,7 +958,6 @@ function request(method, data) {
 
     return deferred.promise();
 }
-
 
 function readyForNextProblem(e, data) {
     userExercise = data.userExercise;
@@ -908,6 +1094,11 @@ function clearExistingProblem() {
             .show();
 
     Khan.scratchpad.clear();
+}
+
+if (!localMode && KA.GANDALF_EXERCISES_SERVER_QUEUE) {
+    // When this file is sourced, initialize the queue with what is stoed in localstorage
+    ServerActionQueue.initialize();
 }
 
 })();
