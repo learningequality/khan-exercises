@@ -59,6 +59,14 @@
 */
 define(function(require) {
 
+try {
+    var asyncloader = require("scriptjs");
+}
+catch (err) {
+    var asyncloader = require;
+    debugLog("No scriptjs module" + err);
+}
+
 var crc32 = require("./utils/crc32.js");
 
 // Numbers which are coprime to the number of bins, used for jumping through
@@ -1844,8 +1852,7 @@ function prepareSite() {
         // i18nize the decimal point button
         $(".calculator-decimal").html(separator);
     }
-
-    require(["./genfiles/calculator.js"], initializeCalculator);
+    asyncloader(["./genfiles/calculator.js"], initializeCalculator);
     Khan.initReportIssueLink("#extras .report-issue-link");
 
     $("#answer_area").delegate("input.button, select", "keydown", function(e) {
@@ -2099,7 +2106,7 @@ function loadModule(moduleName) {
     debugLog("loadModule mod " + moduleName);
 
     // Load the module
-    require(["./utils/" + moduleName + ".js"], function() {
+    asyncloader(["./utils/" + moduleName + ".js"], function() {
         selfPromise.resolve();
     });
 
