@@ -1940,7 +1940,7 @@ function loadModule(moduleName) {
     debugLog("loadModule mod " + moduleName);
 
     // Load the module
-    asyncloader(["./utils/" + moduleName + ".js"], function() {
+    asyncloader([Khan.urlBase + "utils/" + moduleName + ".js"], function() {
         selfPromise.resolve();
     });
 
